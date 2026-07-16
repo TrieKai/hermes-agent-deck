@@ -311,6 +311,106 @@
 
     .dark .flow-body { color: var(--dark-muted); }
 
+    .slide.attendance-slide { padding-top: 4.8vh; }
+    .attendance-slide .kicker { margin-bottom: 2vh; }
+    .attendance-slide .title {
+      margin-bottom: 2.5vh;
+      font-size: min(3.55vw, 6vh);
+    }
+
+    .attendance-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 6fr) minmax(420px, 6fr);
+      gap: 2.8vw;
+      height: 56vh;
+    }
+
+    .attendance-steps {
+      display: grid;
+      grid-template-rows: repeat(5, minmax(0, 1fr)) auto;
+      min-width: 0;
+      border-top: 1px solid rgba(255,255,255,.16);
+    }
+
+    .attendance-step {
+      display: grid;
+      grid-template-columns: 38px 112px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      min-height: 0;
+      border-bottom: 1px solid rgba(255,255,255,.13);
+    }
+
+    .attendance-n {
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .attendance-step strong {
+      color: var(--white);
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .attendance-step span {
+      color: var(--dark-muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .attendance-tags {
+      display: flex;
+      gap: 8px;
+      padding-top: 1.3vh;
+      flex-wrap: wrap;
+    }
+
+    .attendance-proof {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      min-width: 0;
+      margin: 0;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 6px;
+      background: var(--white);
+      box-shadow: 0 22px 52px rgba(0,0,0,.2);
+    }
+
+    .attendance-proof-label {
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .attendance-shot {
+      display: grid;
+      place-items: center;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .attendance-shot img {
+      width: 100%;
+      height: auto;
+      max-height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    .attendance-proof figcaption {
+      padding: 10px 4px 2px;
+      border-top: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 650;
+      line-height: 1.45;
+    }
+
     .split {
       display: grid;
       grid-template-columns: 5fr 7fr;
@@ -2019,6 +2119,14 @@
       .visual-story-step strong { font-size:16px; }
       .visual-story-step p { font-size:12px; }
       .visual-story-value { margin-top:8px; padding:9px 12px; font-size:13px; }
+      .attendance-slide { overflow-y:auto; }
+      .attendance-layout { grid-template-columns:1fr; height:auto; }
+      .attendance-steps { grid-template-rows:none; }
+      .attendance-step { grid-template-columns:32px 92px minmax(0,1fr); padding:7px 0; }
+      .attendance-step strong { font-size:15px; }
+      .attendance-step span { font-size:12px; }
+      .attendance-proof { height:30vh; margin-top:10px; }
+      .attendance-proof figcaption { font-size:12px; }
       .governance-slide { overflow-y:auto; }
       .governance-bands { grid-template-columns:1fr; }
       .gov-zone { min-height:auto; padding:14px; }
@@ -2151,40 +2259,27 @@
       <div class="page-no">05 / 23</div>
     </section>
 
-    <section class="slide dark" data-layout="S11" data-title="Ambient Operations">
+    <section class="slide dark attendance-slide" data-layout="S11" data-title="Ambient Operations">
       <div class="kicker reveal">Case 01 / Ambient Operations</div>
       <h2 class="title reveal">團隊狀態變成背景自動化</h2>
-      <div class="flow reveal">
-        <div class="flow-step">
-          <div class="flow-n">01</div>
-          <div class="flow-title">自然回報</div>
-          <p class="flow-body">同仁照平常習慣在 Slack 說明請假、WFH、出差。</p>
+      <div class="attendance-layout">
+        <div class="attendance-steps reveal">
+          <div class="attendance-step"><div class="attendance-n">01</div><strong>自然回報</strong><span>在 Slack 說明請假、WFH 或出差。</span></div>
+          <div class="attendance-step"><div class="attendance-n">02</div><strong>脈絡辨識</strong><span>解析人員、日期、時段與狀態。</span></div>
+          <div class="attendance-step"><div class="attendance-n">03</div><strong>必要時補問</strong><span>資訊模糊時才請同仁補充一次。</span></div>
+          <div class="attendance-step"><div class="attendance-n">04</div><strong>同步行事曆</strong><span>寫入團隊 Calendar 並保留來源。</span></div>
+          <div class="attendance-step"><div class="attendance-n">05</div><strong>回到 Slack</strong><span>立即回報完成，讓狀態透明化。</span></div>
+          <div class="attendance-tags">
+            <span class="tag">高頻</span>
+            <span class="tag">低風險</span>
+            <span class="tag">導入門檻低</span>
+          </div>
         </div>
-        <div class="flow-step">
-          <div class="flow-n">02</div>
-          <div class="flow-title">脈絡辨識</div>
-          <p class="flow-body">Agent 解析人員、日期、時段、狀態與缺漏資訊。</p>
-        </div>
-        <div class="flow-step">
-          <div class="flow-n">03</div>
-          <div class="flow-title">低摩擦確認</div>
-          <p class="flow-body">日期模糊或跨日，只在必要時補問一次。</p>
-        </div>
-        <div class="flow-step">
-          <div class="flow-n">04</div>
-          <div class="flow-title">自動同步</div>
-          <p class="flow-body">寫入團隊行事曆，標記來源與狀態。</p>
-        </div>
-        <div class="flow-step">
-          <div class="flow-n">05</div>
-          <div class="flow-title">團隊共享</div>
-          <p class="flow-body">回到 Slack 回報完成，讓可用人力透明化。</p>
-        </div>
-      </div>
-      <div class="tag-row reveal">
-        <span class="tag">高頻</span>
-        <span class="tag">低風險</span>
-        <span class="tag">導入門檻低</span>
+        <figure class="attendance-proof reveal">
+          <div class="attendance-proof-label">Real Slack Example</div>
+          <div class="attendance-shot"><img src="images/attendance-slack-proof.png" alt="Slack 實例：Iris 在頻道回報 7 月 16 日下午請假，Hermes 助理立即確認已記錄"></div>
+          <figcaption>一句「7/16 下午請假」，Hermes 就能完成理解、記錄與回覆。</figcaption>
+        </figure>
       </div>
       <div class="page-no">06 / 23</div>
     </section>
