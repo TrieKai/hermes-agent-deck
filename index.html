@@ -1,0 +1,2934 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hermes Agent in Slack · AI 團隊助理</title>
+  <style>
+    :root {
+      --paper: #f7f7f4;
+      --ink: #171516;
+      --muted: #68696f;
+      --line: rgba(23, 21, 22, .09);
+      --fill: #f0f0ee;
+      --accent: #0a84ff;
+      --accent-soft: #e9f4ff;
+      --accent-rgb: 10, 132, 255;
+      --white: #ffffff;
+      --dark: #211e1f;
+      --dark-card: #303031;
+      --dark-muted: rgba(255, 255, 255, .62);
+      --safe-bottom: 7.5vh;
+      --font: Inter, Helvetica, "Noto Sans TC", "Noto Sans SC", "Microsoft JhengHei", Arial, sans-serif;
+      --mono: "SFMono-Regular", "Roboto Mono", "Cascadia Mono", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+    body {
+      font-family: var(--font);
+      background: var(--paper);
+      color: var(--ink);
+      letter-spacing: 0;
+    }
+
+    #grid-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: .72;
+      pointer-events: none;
+    }
+
+    .deck {
+      position: relative;
+      z-index: 1;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      transition: transform .55s cubic-bezier(.76, 0, .24, 1);
+      will-change: transform;
+    }
+
+    .slide {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      flex: 0 0 100vw;
+      padding: 6.2vh 6vw var(--safe-bottom);
+      overflow: hidden;
+      background: var(--paper);
+    }
+
+    .slide.dark {
+      background: var(--dark);
+      color: var(--white);
+    }
+
+    .slide.hero {
+      background: transparent;
+    }
+
+    .slide.hero.dark::before,
+    .slide.hero.light::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(circle at 72% 18%, rgba(var(--accent-rgb), .34), transparent 18%),
+        radial-gradient(circle at 86% 22%, rgba(47, 230, 205, .32), transparent 16%),
+        var(--dark);
+    }
+
+    .slide.hero.light::before {
+      background:
+        radial-gradient(circle at 72% 18%, rgba(var(--accent-rgb), .28), transparent 18%),
+        radial-gradient(circle at 86% 22%, rgba(47, 230, 205, .3), transparent 16%),
+        var(--paper);
+    }
+
+    .slide::after {
+      content: "AI";
+      position: absolute;
+      top: 4.5vh;
+      right: 5.4vw;
+      min-width: 34px;
+      height: 24px;
+      padding: 0 10px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: var(--accent);
+      color: var(--white);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0;
+      z-index: 2;
+    }
+
+    .slide.light::before {
+      content: "";
+      position: absolute;
+      right: -10vw;
+      top: -18vh;
+      width: 46vw;
+      height: 38vh;
+      background:
+        radial-gradient(circle at 28% 54%, rgba(var(--accent-rgb), .2), transparent 34%),
+        radial-gradient(circle at 64% 36%, rgba(68, 223, 209, .22), transparent 36%);
+      filter: blur(18px);
+      opacity: .82;
+      z-index: -1;
+    }
+
+    .kicker, .meta, .page-no {
+      font-family: var(--mono);
+      text-transform: uppercase;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .kicker {
+      color: inherit;
+      margin-bottom: 8vh;
+      text-transform: none;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      opacity: .92;
+    }
+
+    .kicker::before {
+      content: "";
+      width: 13px;
+      height: 13px;
+      border-radius: 999px;
+      background: var(--accent);
+      display: inline-block;
+    }
+
+    .dark .kicker { color: var(--white); }
+
+    h1, h2, h3, p { margin: 0; }
+
+    .hero-title {
+      font-size: min(6.1vw, 10.7vh);
+      line-height: .94;
+      font-weight: 400;
+      max-width: 78vw;
+    }
+
+    .statement {
+      font-size: min(5.7vw, 10vh);
+      line-height: 1.02;
+      font-weight: 400;
+      max-width: 82vw;
+    }
+
+    .title {
+      font-size: min(4.7vw, 8.3vh);
+      line-height: 1.02;
+      font-weight: 400;
+      max-width: 82vw;
+      margin-bottom: 5.2vh;
+    }
+
+    .lead {
+      font-size: 24px;
+      line-height: 1.55;
+      font-weight: 400;
+      color: var(--muted);
+      max-width: 760px;
+    }
+
+    .dark .lead { color: var(--dark-muted); }
+
+    .grid-12 {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 24px;
+      align-items: start;
+    }
+
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-7 { grid-column: span 7; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+
+    .card-fill, .card-ink, .card-accent, .card-outlined {
+      min-height: 22vh;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      backdrop-filter: blur(12px);
+    }
+
+    .card-fill { background: var(--fill); }
+    .card-ink { background: rgba(20, 32, 51, .88); color: var(--white); border-color: rgba(20, 32, 51, .18); }
+    .card-accent { background: var(--accent); color: var(--white); border-color: var(--accent); }
+    .card-outlined { background: rgba(255, 255, 255, .52); }
+    .dark .card-fill { background: var(--dark-card); border-color: rgba(255,255,255,.05); }
+    .dark .card-outlined { background: var(--dark-card); border-color: rgba(255,255,255,.05); }
+
+    .card-title {
+      font-size: 28px;
+      line-height: 1.18;
+      font-weight: 600;
+      margin-bottom: 18px;
+    }
+
+    .card-body, li {
+      font-size: 18px;
+      line-height: 1.5;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    .card-ink .card-body,
+    .card-accent .card-body,
+    .dark .card-body,
+    .dark li {
+      color: var(--dark-muted);
+    }
+
+    .num {
+      font-size: min(9vw, 16vh);
+      line-height: .82;
+      font-weight: 500;
+      color: var(--accent);
+    }
+
+    .dark .num { color: var(--white); }
+
+    .label {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .dark .label { color: rgba(255,255,255,.48); }
+
+    .hairline {
+      height: 1px;
+      background: var(--line);
+      margin: 3.2vh 0;
+    }
+
+    .dark .hairline { background: rgba(255,255,255,.08); }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .flow-step {
+      min-height: 23vh;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .68);
+      backdrop-filter: blur(12px);
+    }
+
+    .dark .flow-step {
+      border-color: rgba(255,255,255,.05);
+      background: var(--dark-card);
+    }
+
+    .flow-n {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 28px;
+    }
+
+    .flow-title {
+      font-size: 21px;
+      line-height: 1.25;
+      font-weight: 500;
+      margin-bottom: 14px;
+    }
+
+    .flow-body {
+      font-size: 16px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .dark .flow-body { color: var(--dark-muted); }
+
+    .split {
+      display: grid;
+      grid-template-columns: 5fr 7fr;
+      gap: 5vw;
+      align-items: start;
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      gap: 38px;
+      align-items: stretch;
+    }
+
+    .vrule { background: var(--line); min-height: 49vh; }
+    .dark .vrule { background: rgba(255,255,255,.08); }
+
+    .list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 18px;
+    }
+
+    .list li {
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+    }
+
+    .dark .list li { border-color: rgba(255,255,255,.1); }
+
+    .tag-row {
+      position: absolute;
+      left: 6vw;
+      bottom: 5.2vh;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      max-width: 70vw;
+    }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.62);
+      color: #5f6066;
+    }
+
+    .dark .tag {
+      border-color: rgba(255,255,255,.08);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.62);
+    }
+
+    .page-no {
+      position: absolute;
+      left: 2.7vw;
+      bottom: 3vh;
+      color: var(--muted);
+    }
+
+    .dark .page-no { color: rgba(255,255,255,.56); }
+
+    .nav {
+      position: fixed;
+      right: 2.7vw;
+      bottom: 2.4vh;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--muted);
+      user-select: none;
+    }
+
+    .nav button {
+      width: 34px;
+      height: 34px;
+      border: 1px solid rgba(var(--accent-rgb), .18);
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--white);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .nav .hint { color: inherit; }
+    :fullscreen .nav .hint { display: none; }
+
+    .index {
+      position: fixed;
+      inset: 0;
+      z-index: 12;
+      background: rgba(247,247,244,.97);
+      color: var(--ink);
+      padding: 5vh 5vw;
+      display: none;
+      overflow: auto;
+    }
+
+    .index.open { display: block; }
+    .index-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 4vh;
+    }
+
+    .thumb {
+      border: 1px solid var(--line);
+      padding: 18px;
+      min-height: 132px;
+      cursor: pointer;
+      background: rgba(255,255,255,.76);
+      border-radius: 18px;
+    }
+
+    .thumb strong { display: block; font-size: 20px; line-height: 1.25; font-weight: 400; margin-top: 16px; }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .65s ease, transform .65s ease;
+    }
+
+    .active .reveal {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .active .reveal:nth-child(2) { transition-delay: .08s; }
+    .active .reveal:nth-child(3) { transition-delay: .16s; }
+    .active .reveal:nth-child(4) { transition-delay: .24s; }
+
+    .low-power .deck,
+    .low-power .reveal {
+      transition: none !important;
+    }
+
+    .accent-block {
+      display: inline-block;
+      background: transparent;
+      color: inherit;
+      border: 0;
+      padding: 0;
+    }
+
+    .diagram {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 18px;
+      align-items: stretch;
+      margin-top: 1.5vh;
+    }
+
+    .diagram .node {
+      min-height: 18vh;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 24px;
+      background: rgba(255,255,255,.68);
+      backdrop-filter: blur(12px);
+    }
+
+    .dark .diagram .node { border-color: rgba(255,255,255,.05); background: var(--dark-card); }
+
+    .mini {
+      font-size: 16px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .dark .mini { color: var(--dark-muted); }
+
+    .slide.skill-slide .kicker { margin-bottom: 2.8vh; }
+    .slide.skill-slide .title {
+      font-size: min(3.4vw, 5.8vh);
+      margin-bottom: 3vh;
+      max-width: 90vw;
+    }
+
+    .skill-growth {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: 4vw;
+      align-items: start;
+    }
+
+    .growth-points {
+      display: grid;
+      gap: 16px;
+    }
+
+    .growth-point {
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+    }
+
+    .slack-shots {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .slack-shot {
+      height: 54vh;
+      border-radius: 18px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      border: 1px solid rgba(23,21,22,.1);
+      background: var(--white);
+      box-shadow: 0 18px 48px rgba(20,32,51,.12);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(10,132,255,.55) rgba(20,32,51,.08);
+    }
+
+    .slack-shot img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .slack-shot::-webkit-scrollbar { width: 8px; }
+    .slack-shot::-webkit-scrollbar-track { background: rgba(20,32,51,.08); }
+    .slack-shot::-webkit-scrollbar-thumb {
+      background: rgba(10,132,255,.55);
+      border-radius: 999px;
+    }
+
+    .xiaohei-frame {
+      margin-top: -1vh;
+      width: min(100%, 1120px);
+      height: 58vh;
+      border-radius: 24px;
+      overflow: hidden;
+      background: var(--white);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .xiaohei-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .slide.figure { padding-top: 5vh; }
+    .slide.figure .kicker { margin-bottom: 2.2vh; }
+    .slide.figure .title {
+      font-size: min(3.5vw, 5.8vh);
+      line-height: 1.08;
+      margin-bottom: 2.2vh;
+      max-width: 88vw;
+    }
+    .slide.figure .xiaohei-frame { height: 50vh; }
+    .slide.figure .lead {
+      margin-top: 2vh !important;
+      font-size: 20px;
+      line-height: 1.38;
+      max-width: 980px;
+    }
+
+    .slide.case-map { padding-top: 5vh; }
+    .slide.case-map .kicker { margin-bottom: 2.2vh; }
+    .slide.case-map .title {
+      font-size: min(3.6vw, 6.2vh);
+      margin-bottom: 3vh;
+      max-width: 90vw;
+    }
+    .slide.case-map .card-fill { min-height: 17vh; }
+    .slide.case-map .num { font-size: min(5vw, 8vh); }
+    .slide.case-map .card-title { margin-bottom: 8px; }
+
+    .slide.skill-logic-slide { padding-top: 4.8vh; }
+    .slide.skill-logic-slide .kicker { margin-bottom: 2vh; }
+    .slide.skill-logic-slide .title {
+      font-size: min(3.6vw, 6.2vh);
+      margin-bottom: 3.2vh;
+      max-width: 90vw;
+    }
+    .logic-canvas {
+      position: relative;
+      width: 88vw;
+      height: 49vh;
+    }
+    .logic-node {
+      position: absolute;
+      height: 12.5vh;
+      padding: 18px 16px;
+      border: 1px solid rgba(20, 32, 51, .18);
+      border-radius: 0;
+      background: rgba(255, 255, 255, .76);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 2;
+    }
+    .logic-node.node-a { left: 2%; top: 3%; width: 15%; }
+    .logic-node.node-b { left: 21%; top: 3%; width: 17%; }
+    .logic-node.node-c { left: 43%; top: 3%; width: 18%; }
+    .logic-node.node-d { left: 65%; top: 3%; width: 16%; }
+    .logic-node.node-e { left: 2%; top: 54%; width: 15%; }
+    .logic-node.node-f { left: 22%; top: 54%; width: 15%; }
+    .logic-node.node-g { left: 41%; top: 54%; width: 17%; }
+    .logic-node.node-h { left: 62%; top: 54%; width: 17%; }
+    .logic-node.node-i { left: 82%; top: 54%; width: 15%; }
+    .logic-node.decision {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--white);
+    }
+    .logic-node.memory { background: var(--fill); }
+    .logic-node.skill { border-top: 5px solid var(--accent); }
+    .logic-id {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .decision .logic-id { color: rgba(255,255,255,.72); }
+    .logic-text {
+      font-size: 20px;
+      line-height: 1.28;
+      font-weight: 500;
+    }
+    .logic-connectors {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      z-index: 1;
+    }
+    .logic-connectors path {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 2;
+      vector-effect: non-scaling-stroke;
+    }
+    .logic-connectors marker path { fill: var(--accent); }
+    .logic-label {
+      position: absolute;
+      z-index: 3;
+      padding: 4px 8px;
+      background: var(--paper);
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .logic-label.memory-label { left: 7%; top: 42%; }
+    .logic-label.skill-label { left: 35%; top: 42%; }
+    .logic-label.return-label {
+      left: 18%;
+      top: 88%;
+      color: var(--accent);
+    }
+    .skill-logic-note {
+      margin-top: 1.2vh;
+      font-size: 19px;
+      line-height: 1.4;
+      color: var(--muted);
+    }
+
+    .slide.ponytail-slide { padding-top: 4.6vh; }
+    .slide.ponytail-slide .kicker { margin-bottom: 1.8vh; }
+    .slide.ponytail-slide .title {
+      font-size: min(3.55vw, 6.1vh);
+      line-height: 1.05;
+      margin-bottom: 2.8vh;
+      max-width: 91vw;
+    }
+
+    .pt-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+      gap: 4vw;
+      height: 57vh;
+      align-items: stretch;
+    }
+
+    .pt-mascot {
+      position: relative;
+      min-width: 0;
+      margin: 0;
+      border-right: 1px solid rgba(255,255,255,.09);
+      overflow: hidden;
+    }
+
+    .pt-mascot img {
+      position: absolute;
+      left: 48%;
+      bottom: -3.5vh;
+      width: auto;
+      height: 50vh;
+      max-width: 96%;
+      object-fit: contain;
+      transform: translateX(-50%);
+      filter: drop-shadow(0 24px 42px rgba(0,0,0,.22));
+    }
+
+    .pt-brand {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      font-family: var(--mono);
+      color: rgba(255,255,255,.52);
+      font-size: 13px;
+    }
+
+    .pt-brand strong {
+      color: var(--white);
+      font-family: var(--font);
+      font-size: 23px;
+      font-weight: 650;
+    }
+
+    .pt-quote {
+      position: absolute;
+      right: 1.5vw;
+      bottom: 3.2vh;
+      z-index: 3;
+      padding: 13px 16px;
+      border-radius: 4px;
+      background: var(--accent);
+      color: var(--white);
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .pt-panel {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pt-panel > .label { margin-bottom: 7px; }
+
+    .pt-rungs {
+      border-top: 1px solid rgba(255,255,255,.1);
+    }
+
+    .pt-rung {
+      min-height: 7.2vh;
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+
+    .pt-rung b {
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 14px;
+    }
+
+    .pt-rung strong {
+      font-size: 22px;
+      line-height: 1.2;
+      font-weight: 600;
+    }
+
+    .pt-rung span {
+      color: var(--dark-muted);
+      font-size: 15px;
+      line-height: 1.35;
+      text-align: right;
+    }
+
+    .pt-result {
+      margin-top: 1.6vh;
+      padding: 14px 18px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+      border: 1px solid rgba(var(--accent-rgb), .55);
+      border-radius: 6px;
+      background: rgba(var(--accent-rgb), .12);
+    }
+
+    .pt-result strong {
+      font-size: 22px;
+      font-weight: 650;
+    }
+
+    .pt-result span {
+      color: #72d8ff;
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .pt-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 2.1vh;
+      border-top: 1px solid rgba(255,255,255,.1);
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+
+    .pt-metric {
+      padding: 1.5vh 16px 1.35vh;
+      border-left: 1px solid rgba(255,255,255,.1);
+    }
+
+    .pt-metric:first-child { border-left: 0; padding-left: 0; }
+    .pt-metric strong {
+      display: block;
+      color: var(--white);
+      font-size: min(2.5vw, 4.3vh);
+      line-height: 1;
+      font-weight: 500;
+    }
+
+    .pt-metric span {
+      display: block;
+      margin-top: 7px;
+      color: var(--dark-muted);
+      font-size: 14px;
+    }
+
+    .pt-source {
+      margin-top: 1vh;
+      color: rgba(255,255,255,.42);
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .slide.ponytail-routing-slide { padding-top: 4.6vh; }
+    .slide.ponytail-routing-slide .kicker { margin-bottom: 1.8vh; }
+    .slide.ponytail-routing-slide .title {
+      font-size: min(3.45vw, 5.9vh);
+      line-height: 1.05;
+      margin-bottom: 3vh;
+      max-width: 91vw;
+    }
+
+    .pt-route-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: 3vw;
+      height: 57vh;
+    }
+
+    .pt-risk-panel {
+      min-width: 0;
+      padding: 24px 26px;
+      border-radius: 6px;
+      background: var(--dark);
+      color: var(--white);
+      overflow: hidden;
+    }
+
+    .pt-risk-intro {
+      min-height: 16vh;
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 20px;
+      align-items: center;
+    }
+
+    .pt-risk-intro img {
+      width: 104px;
+      height: 14vh;
+      object-fit: contain;
+      object-position: center 18%;
+    }
+
+    .pt-risk-intro .label { color: rgba(255,255,255,.48); }
+    .pt-risk-intro strong {
+      display: block;
+      font-size: 27px;
+      line-height: 1.15;
+      font-weight: 600;
+    }
+
+    .pt-risk-list { border-top: 1px solid rgba(255,255,255,.12); }
+    .pt-risk-item {
+      min-height: 10.5vh;
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      gap: 14px;
+      align-content: center;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+
+    .pt-risk-item b {
+      color: #ff9f43;
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    .pt-risk-item strong {
+      display: block;
+      font-size: 19px;
+      line-height: 1.25;
+      font-weight: 600;
+    }
+
+    .pt-risk-item span {
+      display: block;
+      margin-top: 4px;
+      color: var(--dark-muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .pt-solution-panel { min-width: 0; }
+
+    .pt-router-node {
+      padding: 17px 20px;
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      border-radius: 6px;
+      background: var(--accent);
+      color: var(--white);
+    }
+
+    .pt-router-node b {
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    .pt-router-node strong {
+      font-size: 23px;
+      font-weight: 650;
+    }
+
+    .pt-router-node span {
+      color: rgba(255,255,255,.78);
+      font-size: 14px;
+    }
+
+    .pt-route-arrow {
+      height: 4.4vh;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      font-size: 26px;
+    }
+
+    .pt-route-lanes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .pt-route-lane {
+      min-height: 25vh;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255,255,255,.62);
+    }
+
+    .pt-route-lane.is-code {
+      border-color: rgba(var(--accent-rgb), .45);
+      background: var(--accent-soft);
+    }
+
+    .pt-route-lane .label { margin-bottom: 9px; }
+    .pt-route-lane h3 {
+      font-size: 23px;
+      line-height: 1.2;
+      font-weight: 650;
+    }
+
+    .pt-route-lane p {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    .pt-route-path {
+      margin-top: 2vh;
+      padding-top: 13px;
+      border-top: 1px solid var(--line);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .pt-route-lane.is-code .pt-route-path { color: var(--accent); }
+
+    .pt-route-guard {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: 2.2vh;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .pt-route-guard span {
+      padding: 12px 14px;
+      border-left: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .pt-route-guard span:first-child { border-left: 0; }
+
+    .slide.ponytail-proof-slide { padding-top: 4.6vh; }
+    .slide.ponytail-proof-slide .kicker { margin-bottom: 1.8vh; }
+    .slide.ponytail-proof-slide .title {
+      font-size: min(3.4vw, 5.8vh);
+      line-height: 1.05;
+      margin-bottom: 2.4vh;
+      max-width: 91vw;
+    }
+
+    .pt-proof-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2vw;
+    }
+
+    .pt-proof-head {
+      min-height: 4.2vh;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .pt-proof-head strong {
+      font-size: 22px;
+      font-weight: 650;
+    }
+
+    .pt-proof-head span {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .pt-proof-head.is-active strong,
+    .pt-proof-head.is-active span { color: var(--accent); }
+
+    .pt-proof-shot {
+      height: 43vh;
+      margin-top: 1.2vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      overscroll-behavior: contain;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--white);
+      box-shadow: 0 16px 38px rgba(20,32,51,.09);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(10,132,255,.7) rgba(20,32,51,.08);
+    }
+
+    .pt-proof-shot img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .pt-proof-shot::-webkit-scrollbar { width: 9px; }
+    .pt-proof-shot::-webkit-scrollbar-track { background: rgba(20,32,51,.08); }
+    .pt-proof-shot::-webkit-scrollbar-thumb {
+      background: rgba(10,132,255,.7);
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,.7);
+    }
+
+    .pt-proof-findings {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 24px;
+      margin-top: 2.2vh;
+    }
+
+    .pt-proof-point {
+      padding-top: 13px;
+      border-top: 3px solid var(--line);
+    }
+
+    .pt-proof-point.is-active { border-color: var(--accent); }
+
+    .pt-proof-point b {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .pt-proof-point strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1.32;
+      font-weight: 600;
+    }
+
+    .slide.case-hub-slide,
+    .slide.pm-story-slide,
+    .slide.model-route-slide,
+    .slide.governance-slide { padding-top: 4.8vh; }
+
+    .case-hub-slide .kicker,
+    .pm-story-slide .kicker,
+    .model-route-slide .kicker,
+    .governance-slide .kicker { margin-bottom: 2vh; }
+
+    .case-hub-slide .title,
+    .pm-story-slide .title,
+    .model-route-slide .title,
+    .governance-slide .title {
+      font-size: min(3.55vw, 6.1vh);
+      margin-bottom: 2.6vh;
+      max-width: 91vw;
+    }
+
+    .case-hub {
+      position: relative;
+      width: min(100%, 1180px);
+      height: 57vh;
+      margin: 0 auto;
+    }
+
+    .case-connectors {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    .case-connectors line {
+      stroke: rgba(var(--accent-rgb), .32);
+      stroke-width: 2;
+      stroke-dasharray: 8 11;
+      vector-effect: non-scaling-stroke;
+      animation: case-dash 5s linear infinite;
+    }
+
+    .case-core {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 210px;
+      height: 116px;
+      transform: translate(-50%, -50%);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border-radius: 6px;
+      background: var(--accent);
+      color: var(--white);
+      box-shadow: 0 22px 50px rgba(var(--accent-rgb), .24);
+      z-index: 2;
+    }
+
+    .case-core strong { font-size: 27px; font-weight: 650; }
+    .case-core span {
+      display: block;
+      margin-top: 6px;
+      color: rgba(255,255,255,.76);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .case-node {
+      position: absolute;
+      width: 25.5%;
+      min-height: 11.5vh;
+      padding: 16px 18px;
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr);
+      gap: 14px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255,255,255,.82);
+      box-shadow: 0 14px 34px rgba(20,32,51,.07);
+      z-index: 2;
+    }
+
+    .case-mark {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .case-node:nth-of-type(3) .case-mark { background:#e9f7f1; color:#16885f; }
+    .case-node:nth-of-type(4) .case-mark { background:#fff3d8; color:#9b6b00; }
+    .case-node:nth-of-type(5) .case-mark { background:#ffe9df; color:#c75528; }
+    .case-node:nth-of-type(6) .case-mark { background:#f0eaff; color:#7450b8; }
+    .case-node:nth-of-type(7) .case-mark { background:#e8f0f4; color:#41606f; }
+
+    .case-node strong {
+      display: block;
+      font-size: 19px;
+      line-height: 1.2;
+      font-weight: 650;
+    }
+
+    .case-node span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.3;
+    }
+
+    .case-1 { left: 0; top: 2%; }
+    .case-2 { left: 37.25%; top: 0; }
+    .case-3 { right: 0; top: 2%; }
+    .case-4 { left: 0; bottom: 2%; }
+    .case-5 { left: 37.25%; bottom: 0; }
+    .case-6 { right: 0; bottom: 2%; }
+
+    .pm-storyboard {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      height: 57vh;
+      border-top: 1px solid rgba(255,255,255,.1);
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+
+    .pm-scene {
+      position: relative;
+      min-width: 0;
+      padding: 20px 22px;
+      border-left: 1px solid rgba(255,255,255,.1);
+    }
+
+    .pm-scene:first-child { border-left: 0; padding-left: 0; }
+    .pm-scene:last-child { padding-right: 0; }
+    .pm-scene:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -13px;
+      top: 23vh;
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: var(--dark);
+      color: var(--accent);
+      font-size: 21px;
+      z-index: 3;
+    }
+
+    .pm-visual {
+      height: 29vh;
+      margin: 1.8vh 0 2vh;
+      padding: 16px;
+      display: grid;
+      align-content: center;
+      border-radius: 6px;
+      background: var(--dark-card);
+      overflow: hidden;
+    }
+
+    .pm-step {
+      color: rgba(255,255,255,.48);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .pm-scene h3 {
+      font-size: 22px;
+      line-height: 1.2;
+      font-weight: 650;
+    }
+
+    .pm-scene > p {
+      margin-top: 8px;
+      color: var(--dark-muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .pm-bubble {
+      max-width: 90%;
+      padding: 11px 13px;
+      border-radius: 14px 14px 14px 3px;
+      background: rgba(255,255,255,.1);
+      color: var(--white);
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .pm-bubble.is-reply {
+      justify-self: end;
+      margin-top: 12px;
+      border-radius: 14px 14px 3px 14px;
+      background: var(--accent);
+    }
+
+    .pm-mini-flow {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 8px;
+      align-items: center;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .pm-mini-flow b {
+      padding: 16px 7px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 5px;
+      background: rgba(255,255,255,.05);
+    }
+
+    .pm-mini-flow i { color: #65dbc5; font-style: normal; }
+
+    .pm-feedback {
+      display: grid;
+      gap: 12px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .pm-feedback del { color: rgba(255,255,255,.36); }
+    .pm-feedback ins {
+      padding-left: 12px;
+      border-left: 3px solid #65dbc5;
+      color: var(--white);
+      text-decoration: none;
+    }
+
+    .pm-skill-file {
+      width: 82%;
+      margin: auto;
+      padding: 17px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 5px;
+      background: rgba(255,255,255,.06);
+      font-family: var(--mono);
+    }
+
+    .pm-skill-file strong { display:block; color:#65dbc5; font-size:17px; }
+    .pm-skill-file span {
+      display:block;
+      margin-top:10px;
+      color:var(--dark-muted);
+      font-size:12px;
+      line-height:1.6;
+    }
+
+    .model-pipeline-row {
+      display: grid;
+      grid-template-columns: 1fr 64px 1fr 64px 1fr 64px 1fr;
+      align-items: center;
+      margin-top: 1vh;
+    }
+
+    .model-stage {
+      min-height: 24vh;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255,255,255,.72);
+      box-shadow: 0 14px 34px rgba(20,32,51,.06);
+    }
+
+    .model-logo {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .model-stage.stage-router .model-logo { background:#ede9ff; color:#684cc8; }
+    .model-stage.stage-vertex .model-logo { background:#e9f7f1; color:#16885f; }
+
+    .model-stage strong {
+      display: block;
+      margin-top: 18px;
+      font-size: 23px;
+      line-height: 1.2;
+      font-weight: 650;
+    }
+
+    .model-stage span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .model-link {
+      position: relative;
+      height: 2px;
+      background: rgba(var(--accent-rgb), .2);
+      overflow: hidden;
+    }
+
+    .model-link::after {
+      content: "";
+      position: absolute;
+      top: -3px;
+      left: -8px;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 14px rgba(var(--accent-rgb), .65);
+      animation: model-packet 2.4s linear infinite;
+    }
+
+    .model-governance {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: 4vh;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .model-governance div {
+      padding: 16px 20px;
+      border-left: 1px solid var(--line);
+    }
+
+    .model-governance div:first-child { border-left: 0; }
+    .model-governance b {
+      display:block;
+      color:var(--accent);
+      font-family:var(--mono);
+      font-size:12px;
+    }
+    .model-governance span {
+      display:block;
+      margin-top:6px;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .model-route-slide .model-stage {
+      min-height: 17vh;
+      padding: 17px 18px;
+    }
+
+    .model-route-slide .model-stage strong {
+      margin-top: 11px;
+      font-size: 21px;
+    }
+
+    .model-route-slide .model-stage span {
+      margin-top: 5px;
+      font-size: 13px;
+    }
+
+    .model-route-slide .model-governance { margin-top: 1.8vh; }
+    .model-route-slide .model-governance div { padding: 9px 16px; }
+
+    .cost-footer-strip {
+      position: relative;
+      height: 30vh;
+      margin-top: 1.7vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(10,132,255,.72) rgba(20,32,51,.08);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--white);
+      box-shadow: 0 14px 32px rgba(20,32,51,.07);
+    }
+
+    .cost-footer-strip img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .cost-footer-strip::-webkit-scrollbar { width: 8px; }
+    .cost-footer-strip::-webkit-scrollbar-track { background: rgba(20,32,51,.08); }
+    .cost-footer-strip::-webkit-scrollbar-thumb {
+      background: rgba(10,132,255,.72);
+      border-radius: 8px;
+    }
+
+    .cost-footer-badge {
+      position: absolute;
+      right: 16px;
+      top: 14px;
+      z-index: 2;
+      padding: 9px 12px;
+      border-radius: 4px;
+      background: rgba(33,30,31,.9);
+      color: var(--white);
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .cost-footer-badge strong {
+      display: block;
+      font-family: var(--font);
+      font-size: 20px;
+      font-weight: 650;
+    }
+
+    .slide.cx-context-slide { padding-top: 4.8vh; }
+    .cx-context-slide .kicker { margin-bottom: 2vh; }
+    .cx-context-slide .title {
+      max-width: 92vw;
+      margin-bottom: 2.4vh;
+      font-size: min(3.45vw, 5.9vh);
+    }
+
+    .cx-role-map {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 2.3vw;
+      height: 48vh;
+    }
+
+    .cx-role-card {
+      position: relative;
+      display: grid;
+      grid-template-rows: 18vh auto 1fr;
+      min-width: 0;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--white);
+      box-shadow: 0 18px 42px rgba(20,32,51,.08);
+    }
+
+    .cx-role-card:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -1.9vw;
+      z-index: 2;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 26px;
+      font-weight: 800;
+      transform: translateY(-50%);
+    }
+
+    .cx-role-visual {
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border-radius: 4px;
+      background:
+        linear-gradient(rgba(10,132,255,.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(10,132,255,.08) 1px, transparent 1px),
+        rgba(10,132,255,.04);
+      background-size: 18px 18px;
+    }
+
+    .cx-role-symbol {
+      display: grid;
+      place-items: center;
+      width: 92px;
+      height: 92px;
+      border: 3px solid var(--accent);
+      border-radius: 50%;
+      background: var(--white);
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 24px;
+      font-weight: 850;
+      box-shadow: 8px 8px 0 rgba(10,132,255,.12);
+    }
+
+    .cx-role-label {
+      margin-top: 16px;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .cx-role-card h3 {
+      margin: 7px 0 0;
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    .cx-role-card p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .cx-context-summary {
+      margin-top: 1.5vh;
+      padding: 12px 14px;
+      border-left: 4px solid var(--accent);
+      background: rgba(10,132,255,.07);
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 750;
+      line-height: 1.45;
+    }
+
+    .slide.visual-story-slide { padding-top: 4.8vh; }
+    .visual-story-slide .kicker { margin-bottom: 2vh; }
+    .visual-story-slide .title {
+      max-width: 92vw;
+      margin-bottom: 2.5vh;
+      font-size: min(3.35vw, 5.65vh);
+    }
+
+    .visual-story-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 7fr) minmax(320px, 5fr);
+      gap: 2.7vw;
+      align-items: stretch;
+      height: 55vh;
+    }
+
+    .visual-story-figure {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 6px;
+      background: var(--white);
+      box-shadow: 0 22px 52px rgba(0,0,0,.18);
+    }
+
+    .visual-story-figure img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    .visual-story-copy {
+      display: grid;
+      grid-template-rows: repeat(3, minmax(0, 1fr)) auto;
+      min-width: 0;
+      border-top: 1px solid rgba(255,255,255,.16);
+    }
+
+    .visual-story-step {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 13px;
+      align-items: center;
+      min-height: 0;
+      padding: 1.25vh 0;
+      border-bottom: 1px solid rgba(255,255,255,.13);
+    }
+
+    .visual-story-n {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 50%;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .visual-story-step strong {
+      display: block;
+      color: var(--white);
+      font-size: 19px;
+      line-height: 1.25;
+    }
+
+    .visual-story-step p {
+      margin: 4px 0 0;
+      color: var(--dark-muted);
+      font-size: 14px;
+      line-height: 1.42;
+    }
+
+    .visual-story-value {
+      margin-top: 1.4vh;
+      padding: 12px 14px;
+      border-left: 4px solid var(--accent);
+      background: rgba(10,132,255,.14);
+      color: var(--white);
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .visual-story-slide.image-right .visual-story-figure { order: 2; }
+    .visual-story-slide.image-right .visual-story-copy { order: 1; }
+
+    .governance-bands {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 1vh;
+    }
+
+    .gov-zone {
+      min-height: 44vh;
+      padding: 24px;
+      border-top: 6px solid #56d39a;
+      border-radius: 6px;
+      background: var(--dark-card);
+    }
+
+    .gov-zone.is-notify { border-color: #f2cb55; }
+    .gov-zone.is-confirm { border-color: #ff8c5a; }
+
+    .gov-symbol {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 999px;
+      color: #56d39a;
+      font-size: 26px;
+    }
+
+    .is-notify .gov-symbol { color:#f2cb55; }
+    .is-confirm .gov-symbol { color:#ff8c5a; }
+
+    .gov-zone h3 {
+      margin-top: 20px;
+      font-size: 25px;
+      line-height: 1.15;
+      font-weight: 650;
+    }
+
+    .gov-zone > p {
+      margin-top: 9px;
+      color: var(--dark-muted);
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    .gov-items {
+      margin-top: 2.4vh;
+      border-top: 1px solid rgba(255,255,255,.1);
+    }
+
+    .gov-items span {
+      display: block;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      color: rgba(255,255,255,.8);
+      font-size: 15px;
+    }
+
+    .governance-audit {
+      margin-top: 2.3vh;
+      color: rgba(255,255,255,.55);
+      font-family: var(--mono);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @keyframes case-dash { to { stroke-dashoffset: -38; } }
+    @keyframes model-packet { from { left:-8px; } to { left:100%; } }
+
+    .low-power .case-connectors line,
+    .low-power .model-link::after { animation: none; }
+
+    .flow-map {
+      position: relative;
+      height: 49vh;
+      margin-top: 1vh;
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 28px;
+      background:
+        radial-gradient(circle at 50% 46%, rgba(var(--accent-rgb), .18), transparent 24%),
+        rgba(255,255,255,.035);
+      overflow: hidden;
+    }
+
+    .flow-map::before {
+      content: "";
+      position: absolute;
+      inset: 13%;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 999px;
+      animation: pulse-ring 3.4s ease-in-out infinite;
+    }
+
+    .flow-core {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 180px;
+      height: 112px;
+      transform: translate(-50%, -50%);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border-radius: 28px;
+      background: var(--accent);
+      color: var(--white);
+      font-weight: 700;
+      z-index: 3;
+      animation: core-float 4s ease-in-out infinite;
+    }
+
+    .flow-node {
+      position: absolute;
+      width: 170px;
+      min-height: 86px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 22px;
+      background: var(--dark-card);
+      z-index: 2;
+    }
+
+    .flow-node .label {
+      margin-bottom: 8px;
+      color: rgba(255,255,255,.48);
+    }
+
+    .flow-node strong {
+      display: block;
+      font-size: 21px;
+      line-height: 1.12;
+      font-weight: 650;
+    }
+
+    .flow-node span {
+      display: block;
+      margin-top: 8px;
+      font-size: 14px;
+      line-height: 1.35;
+      color: var(--dark-muted);
+    }
+
+    .node-slack { left: 5%; top: 13%; }
+    .node-skill { left: 5%; bottom: 12%; }
+    .node-router { left: calc(50% - 85px); top: 6%; }
+    .node-tools { right: 5%; top: 13%; }
+    .node-gui { right: 5%; bottom: 12%; }
+
+    .flow-line {
+      position: absolute;
+      height: 2px;
+      background: rgba(255,255,255,.13);
+      transform-origin: left center;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .flow-line::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      width: 42%;
+      background: linear-gradient(90deg, transparent, rgba(56, 230, 211, .95), transparent);
+      animation: beam 2.2s linear infinite;
+    }
+
+    .line-a { width: 25%; left: 20%; top: 29%; transform: rotate(14deg); }
+    .line-b { width: 25%; left: 20%; bottom: 28%; transform: rotate(-14deg); }
+    .line-c { width: 18%; left: 41%; top: 23%; transform: rotate(90deg); }
+    .line-d { width: 25%; right: 20%; top: 29%; transform: rotate(166deg); }
+    .line-e { width: 25%; right: 20%; bottom: 28%; transform: rotate(-166deg); }
+
+    .flow-dot {
+      position: absolute;
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: #38e6d3;
+      opacity: .9;
+      z-index: 4;
+      animation: dot-orbit 6s ease-in-out infinite;
+    }
+
+    .dot-1 { left: 19%; top: 28%; animation-delay: 0s; }
+    .dot-2 { left: 30%; bottom: 30%; animation-delay: 1.1s; }
+    .dot-3 { right: 28%; top: 31%; animation-delay: 2.2s; }
+    .dot-4 { right: 19%; bottom: 29%; animation-delay: 3.3s; }
+
+    @keyframes beam {
+      from { transform: translateX(-120%); }
+      to { transform: translateX(260%); }
+    }
+
+    @keyframes pulse-ring {
+      0%, 100% { transform: scale(.96); opacity: .45; }
+      50% { transform: scale(1.04); opacity: .82; }
+    }
+
+    @keyframes core-float {
+      0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+      50% { transform: translate(-50%, -50%) translateY(-7px); }
+    }
+
+    @keyframes dot-orbit {
+      0%, 100% { transform: scale(.8); opacity: .35; }
+      45% { transform: scale(1.45); opacity: 1; }
+    }
+
+    @media (max-width: 760px) {
+      .slide { padding: 5.6vh 5vw 9vh; }
+      .grid-12, .split, .compare, .diagram { display: block; }
+      .span-3, .span-4, .span-5, .span-6, .span-7, .span-8, .span-12 { grid-column: auto; }
+      .card-fill, .card-ink, .card-accent, .card-outlined, .diagram .node { min-height: auto; margin-bottom: 16px; }
+      .flow { grid-template-columns: 1fr; }
+      .hero-title, .statement, .title { font-size: 12vw; max-width: 92vw; }
+      .lead { font-size: 19px; }
+      .vrule { display: none; }
+      .index-grid { grid-template-columns: 1fr; }
+      .slide::after { right: 5vw; top: 3vh; }
+      .flow-map { height: 62vh; }
+      .flow-node { width: 38vw; min-height: auto; padding: 12px; }
+      .flow-core { width: 38vw; height: 82px; }
+      .flow-node strong { font-size: 17px; }
+      .xiaohei-frame { height: 52vh; }
+      .slide.figure .xiaohei-frame { height: 44vh; }
+      .slide.figure .lead { font-size: 17px; }
+      .skill-growth, .slack-shots { display: block; }
+      .slack-shot { height: 34vh; margin-top: 14px; }
+      .slide.ponytail-slide .title { font-size: 9.5vw; }
+      .pt-layout { display: block; height: auto; }
+      .pt-mascot { display: none; }
+      .pt-rung { grid-template-columns: 36px minmax(0, 1fr); padding: 10px 0; }
+      .pt-rung span { grid-column: 2; text-align: left; }
+      .pt-result { grid-template-columns: 1fr; }
+      .pt-metrics { grid-template-columns: 1fr 1fr; }
+      .pt-metric:nth-child(3) { border-left: 0; }
+      .slide.ponytail-routing-slide .title { font-size: 9.2vw; }
+      .pt-route-layout { display: block; height: auto; }
+      .pt-risk-panel { display: none; }
+      .pt-route-lanes { grid-template-columns: 1fr; }
+      .pt-route-lane { min-height: auto; margin-bottom: 10px; }
+      .pt-route-guard { margin-top: 10px; }
+      .slide.ponytail-proof-slide .title { font-size: 9.2vw; }
+      .pt-proof-grid { display: block; }
+      .pt-proof-shot { height: 29vh; margin-bottom: 14px; }
+      .pt-proof-findings { grid-template-columns: 1fr; gap: 8px; }
+      .pt-proof-point { padding-top: 7px; }
+      .case-hub { display:grid; grid-template-columns:1fr 1fr; gap:8px; height:auto; }
+      .case-connectors { display:none; }
+      .case-core, .case-node { position:static; width:auto; min-height:auto; transform:none; }
+      .case-core { grid-column:1 / -1; height:72px; }
+      .case-node { padding:10px; grid-template-columns:38px minmax(0,1fr); }
+      .case-mark { width:36px; height:36px; }
+      .pm-storyboard { grid-template-columns:1fr 1fr; height:auto; }
+      .pm-scene { padding:10px; border-bottom:1px solid rgba(255,255,255,.1); }
+      .pm-scene::after { display:none !important; }
+      .pm-visual { height:15vh; margin:8px 0; }
+      .model-pipeline-row { grid-template-columns:1fr 1fr; gap:8px; }
+      .model-link { display:none; }
+      .model-stage { min-height:auto; padding:12px; }
+      .model-governance { margin-top:12px; }
+      .cost-footer-strip { height:20vh; }
+      .cx-role-map { grid-template-columns:1fr; height:auto; gap:8px; }
+      .cx-role-card { grid-template-columns:72px 1fr; grid-template-rows:auto auto; padding:10px; }
+      .cx-role-card:not(:last-child)::after { display:none; }
+      .cx-role-visual { grid-row:1 / 3; height:72px; }
+      .cx-role-symbol { width:54px; height:54px; font-size:15px; box-shadow:4px 4px 0 rgba(10,132,255,.12); }
+      .cx-role-label { margin:2px 0 0 10px; }
+      .cx-role-card h3 { margin:4px 0 0 10px; font-size:17px; }
+      .cx-role-card p { grid-column:2; margin:4px 0 0 10px; font-size:13px; }
+      .cx-context-summary { margin-top:8px; padding:9px 12px; font-size:13px; }
+      .visual-story-layout { grid-template-columns:1fr; height:auto; }
+      .visual-story-figure { height:28vh; order:1 !important; }
+      .visual-story-copy { grid-template-rows:none; order:2 !important; }
+      .visual-story-step { padding:8px 0; }
+      .visual-story-step strong { font-size:16px; }
+      .visual-story-step p { font-size:12px; }
+      .visual-story-value { margin-top:8px; padding:9px 12px; font-size:13px; }
+      .governance-slide { overflow-y:auto; }
+      .governance-bands { grid-template-columns:1fr; }
+      .gov-zone { min-height:auto; padding:14px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="grid-bg"></canvas>
+
+  <main class="deck" id="deck">
+    <section class="slide hero dark active" data-layout="SWISS-COVER-ASCII" data-title="AI 團隊助理">
+      <div class="kicker reveal">AI Team Assistant / Slack Native Agent</div>
+      <h1 class="hero-title reveal">Hermes Agent<br><span class="accent-block">AI 團隊助理</span></h1>
+      <p class="lead reveal" style="margin-top:5vh; max-width:720px;">不是專精單一任務的 AI 專家，而是接住團隊雜事、追狀態、串工具、推流程的 AI 團隊助理。</p>
+      <div class="tag-row reveal">
+        <span class="tag">Slack App</span>
+        <span class="tag">Azure DevOps</span>
+        <span class="tag">Miro</span>
+        <span class="tag">Local AI Review</span>
+        <span class="tag">cxas scrapi skill</span>
+      </div>
+      <div class="page-no">01 / 23</div>
+    </section>
+
+    <section class="slide light" data-layout="S03" data-title="不是專家工具，是團隊助理">
+      <div class="kicker reveal">Point of View</div>
+      <div class="split">
+        <div>
+          <h2 class="title reveal">Hermes 的定位：不是專家工具，是團隊助理。</h2>
+          <p class="lead reveal">它不只回答單一問題，而是在 Slack 裡接住團隊日常雜事，幫忙整理、追蹤、執行與回報。</p>
+        </div>
+        <div class="grid-12 reveal">
+          <div class="card-fill span-6">
+            <div class="label">Specialist AI</div>
+            <div class="card-title">解一類明確問題</div>
+            <p class="card-body">適合固定任務或特定領域，但通常需要人把問題切好、上下文補齊。</p>
+          </div>
+          <div class="card-accent span-6">
+            <div class="label">Team Assistant</div>
+            <div class="card-title">接住團隊日常流動</div>
+            <p class="card-body">需求從 Slack 來，Hermes 判斷脈絡、選 skill、串工具，在關鍵點請人確認。</p>
+          </div>
+        </div>
+      </div>
+      <div class="page-no">02 / 23</div>
+    </section>
+
+    <section class="slide dark" data-layout="S08" data-title="團隊助理 vs 專家工具">
+      <div class="kicker reveal">Positioning</div>
+      <h2 class="title reveal">不是取代專家，而是補上團隊每天的雜事縫隙</h2>
+      <div class="compare reveal">
+        <div>
+          <div class="label">Hermes</div>
+          <h3 class="card-title">通用 AI 團隊助理</h3>
+          <ul class="list">
+            <li>接住 Slack 裡的雜事、追狀態、整理脈絡。</li>
+            <li>跨工具推進：Calendar、Azure、Miro、repo、cxas。</li>
+            <li>把反覆流程沉澱成 skill，用 GUI 降低管理與驗證門檻。</li>
+          </ul>
+        </div>
+        <div class="vrule"></div>
+        <div>
+          <div class="label">Specialist / 龍蝦</div>
+          <h3 class="card-title">專家型能力</h3>
+          <ul class="list">
+            <li>適合已明確定義的任務、查詢或專門領域能力。</li>
+            <li>很適合當專家，但通常不負責追整條團隊流程。</li>
+            <li>兩者可以互補：專家處理深水區，Hermes 接住日常雜事。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="page-no">03 / 23</div>
+    </section>
+
+    <section class="slide dark visual-story-slide" data-layout="S17" data-title="Slack 裡的 AI 團隊助理">
+      <div class="kicker reveal">Operating Model</div>
+      <h2 class="title reveal">Hermes 是 Slack 裡的 AI 團隊助理</h2>
+      <div class="visual-story-layout">
+        <div class="visual-story-figure reveal"><img src="images/04-hermes-xiaohei-flow.png" alt="小黑手繪 Hermes 流程圖：Slack 需求經 Hermes、OpenRouter、Vertex AI、Skill、工具動作與 GUI 驗證"></div>
+        <div class="visual-story-copy reveal">
+          <div class="visual-story-step"><div class="visual-story-n">01</div><div><strong>Slack 是團隊入口</strong><p>像交辦同事一樣，用自然語言說需求。</p></div></div>
+          <div class="visual-story-step"><div class="visual-story-n">02</div><div><strong>Hermes 判斷怎麼做</strong><p>理解脈絡，選擇 Skill、模型與工具。</p></div></div>
+          <div class="visual-story-step"><div class="visual-story-n">03</div><div><strong>結果回到工作現場</strong><p>在 Slack 或 GUI 回報，讓人檢查與確認。</p></div></div>
+          <div class="visual-story-value">重點不是單一能力，而是把多種工具串成一位團隊助理。</div>
+        </div>
+      </div>
+      <div class="page-no">04 / 23</div>
+    </section>
+
+    <section class="slide light case-hub-slide" data-layout="S04" data-title="六個應用場景">
+      <div class="kicker reveal">Case Map</div>
+      <h2 class="title reveal">Hermes 在中間，接住六種不同的團隊工作</h2>
+      <div class="case-hub reveal">
+        <svg class="case-connectors" viewBox="0 0 1200 580" preserveAspectRatio="none" aria-hidden="true">
+          <line x1="600" y1="290" x2="150" y2="70"></line>
+          <line x1="600" y1="290" x2="600" y2="70"></line>
+          <line x1="600" y1="290" x2="1050" y2="70"></line>
+          <line x1="600" y1="290" x2="150" y2="510"></line>
+          <line x1="600" y1="290" x2="600" y2="510"></line>
+          <line x1="600" y1="290" x2="1050" y2="510"></line>
+        </svg>
+        <div class="case-core">
+          <div><strong>Hermes</strong><span>接需求 → 選 Skill → 串工具</span></div>
+        </div>
+        <div class="case-node case-1">
+          <div class="case-mark">CAL</div>
+          <div><strong>團隊狀態</strong><span>出缺席與行事曆</span></div>
+        </div>
+        <div class="case-node case-2">
+          <div class="case-mark">AI</div>
+          <div><strong>會議追蹤</strong><span>Action item 與 Ticket</span></div>
+        </div>
+        <div class="case-node case-3">
+          <div class="case-mark">AM</div>
+          <div><strong>每日早報</strong><span>看板進度與風險</span></div>
+        </div>
+        <div class="case-node case-4">
+          <div class="case-mark">PR</div>
+          <div><strong>Code Review</strong><span>PR 摘要與風險</span></div>
+        </div>
+        <div class="case-node case-5">
+          <div class="case-mark">M</div>
+          <div><strong>需求同步</strong><span>Miro Story 與 Azure</span></div>
+        </div>
+        <div class="case-node case-6">
+          <div class="case-mark">CX</div>
+          <div><strong>PM 快速驗證</strong><span>CX 變更與本機預覽</span></div>
+        </div>
+      </div>
+      <div class="page-no">05 / 23</div>
+    </section>
+
+    <section class="slide dark" data-layout="S11" data-title="Ambient Operations">
+      <div class="kicker reveal">Case 01 / Ambient Operations</div>
+      <h2 class="title reveal">團隊狀態變成背景自動化</h2>
+      <div class="flow reveal">
+        <div class="flow-step">
+          <div class="flow-n">01</div>
+          <div class="flow-title">自然回報</div>
+          <p class="flow-body">同仁照平常習慣在 Slack 說明請假、WFH、出差。</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-n">02</div>
+          <div class="flow-title">脈絡辨識</div>
+          <p class="flow-body">Agent 解析人員、日期、時段、狀態與缺漏資訊。</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-n">03</div>
+          <div class="flow-title">低摩擦確認</div>
+          <p class="flow-body">日期模糊或跨日，只在必要時補問一次。</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-n">04</div>
+          <div class="flow-title">自動同步</div>
+          <p class="flow-body">寫入團隊行事曆，標記來源與狀態。</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-n">05</div>
+          <div class="flow-title">團隊共享</div>
+          <p class="flow-body">回到 Slack 回報完成，讓可用人力透明化。</p>
+        </div>
+      </div>
+      <div class="tag-row reveal">
+        <span class="tag">高頻</span>
+        <span class="tag">低風險</span>
+        <span class="tag">導入門檻低</span>
+      </div>
+      <div class="page-no">06 / 23</div>
+    </section>
+
+    <section class="slide dark visual-story-slide image-right" data-layout="S22" data-title="會議後 Action Item">
+      <div class="kicker reveal">Case 02 / Meeting Follow-up</div>
+      <h2 class="title reveal">會議決議不再停在筆記裡：Hermes 建 ticket 追 action item</h2>
+      <div class="visual-story-layout">
+        <div class="visual-story-figure reveal"><img src="images/notion-action-items-xiaohei-flow.png" alt="小黑手繪流程圖：Notion AI 會議紀錄經 Slack 摘要，Hermes 擷取 action item 並建立 Azure ticket"></div>
+        <div class="visual-story-copy reveal">
+          <div class="visual-story-step"><div class="visual-story-n">01</div><div><strong>Notion AI 整理會議</strong><p>先留下決議、討論脈絡與待辦事項。</p></div></div>
+          <div class="visual-story-step"><div class="visual-story-n">02</div><div><strong>Hermes 找出 Action Item</strong><p>辨識工作內容、負責人與完成時間。</p></div></div>
+          <div class="visual-story-step"><div class="visual-story-n">03</div><div><strong>建立 Azure Ticket</strong><p>讓待辦正式進入看板，不再只躺在筆記裡。</p></div></div>
+          <div class="visual-story-value">從「有人記得」變成「有 owner、有期限、可追蹤」。</div>
+        </div>
+      </div>
+      <div class="page-no">07 / 23</div>
+    </section>
+
+    <section class="slide dark visual-story-slide" data-layout="S22" data-title="每日看板早報">
+      <div class="kicker reveal">Case 03 / Daily Board Briefing</div>
+      <h2 class="title reveal">Hermes 不只被動接需求，也能每天主動回報團隊狀態</h2>
+      <div class="visual-story-layout">
+        <div class="visual-story-figure reveal"><img src="images/daily-board-summary-xiaohei-flow.png" alt="小黑手繪流程圖：Hermes 每天 09:00 巡看團隊看板，整理 blocked、due soon、沒更新，回報 Slack 早報並提醒 owner"></div>
+        <div class="visual-story-copy reveal">
+          <div class="visual-story-step"><div class="visual-story-n">09</div><div><strong>每天定時巡看</strong><p>由排程觸發，不必等團隊成員開口詢問。</p></div></div>
+          <div class="visual-story-step"><div class="visual-story-n">!</div><div><strong>找出需要注意的事</strong><p>整理 blocked、即將到期與太久沒更新的 ticket。</p></div></div>
+          <div class="visual-story-step"><div class="visual-story-n">@</div><div><strong>Slack 早報與提醒</strong><p>先給團隊摘要，再提醒真正需要行動的 owner。</p></div></div>
+          <div class="visual-story-value">從被動問答，變成會主動巡查與回報的 AI 團隊助理。</div>
+        </div>
+      </div>
+      <div class="page-no">08 / 23</div>
+    </section>
+
+    <section class="slide light" data-layout="S08" data-title="Quality Layer">
+      <div class="kicker reveal">Case 04 / Quality Layer</div>
+      <h2 class="title reveal">Code Review 從「人力瓶頸」變成「分層品質系統」</h2>
+      <div class="compare reveal">
+        <div>
+          <div class="label">Today</div>
+          <h3 class="card-title">人被例行檢查佔住</h3>
+          <ul class="list">
+            <li>命名、格式、重複邏輯與常見風險反覆出現。</li>
+            <li>PR 初期資訊不足，reviewer 需要來回追問。</li>
+            <li>reviewer 的注意力被消耗在可機械化的第一層檢查。</li>
+          </ul>
+        </div>
+        <div class="vrule"></div>
+        <div>
+          <div class="label">Future</div>
+          <h3 class="card-title">AI 先掃描，人再判斷</h3>
+          <ul class="list">
+            <li>Azure create PR → webhook → Hermes Agent。</li>
+            <li>Agent 拉取 diff、本地 repo context 與相關規範。</li>
+            <li>AI 回寫摘要與風險點，人專注在架構、邏輯與產品影響。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="page-no">09 / 23</div>
+    </section>
+
+    <section class="slide light" data-layout="S11" data-title="Continuous Handoff">
+      <div class="kicker reveal">Case 05 / Continuous Handoff</div>
+      <h2 class="title reveal">需求交接從一次性搬運，變成連續同步</h2>
+      <div class="flow reveal">
+        <div class="flow-step">
+          <div class="flow-n">01</div>
+          <div class="flow-title">需求形成</div>
+          <p class="flow-body">PM / BA 在 Miro 中整理 story、流程與討論痕跡。</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-n">02</div>
+          <div class="flow-title">脈絡保留</div>
+          <p class="flow-body">Agent 讀取指定 story、關聯便條與上下文。</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-n">03</div>
+          <div class="flow-title">結構化</div>
+          <p class="flow-body">整理 title、description、acceptance criteria、tags。</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-n">04</div>
+          <div class="flow-title">進入追蹤</div>
+          <p class="flow-body">建立 Azure ticket，保留來源連結與同步狀態。</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-n">05</div>
+          <div class="flow-title">回到現場</div>
+          <p class="flow-body">在 Slack 貼上 ticket link 與需要補齊的欄位。</p>
+        </div>
+      </div>
+      <div class="page-no">10 / 23</div>
+    </section>
+
+    <section class="slide light cx-context-slide" data-layout="S08" data-title="CX 與 SCRAPI 前情提要">
+      <div class="kicker reveal">Case 06 / Context</div>
+      <h2 class="title reveal">三個角色先分清楚：Hermes 指揮，SCRAPI 動手，CX 是工作現場</h2>
+      <div class="cx-role-map reveal">
+        <div class="cx-role-card">
+          <div class="cx-role-visual"><div class="cx-role-symbol">H</div></div>
+          <div class="cx-role-label">Team Assistant</div>
+          <div><h3>Hermes：聽懂交辦</h3><p>從 Slack 接需求，理解脈絡，決定要使用哪一個 Skill 與工具。</p></div>
+        </div>
+        <div class="cx-role-card">
+          <div class="cx-role-visual"><div class="cx-role-symbol">S</div></div>
+          <div class="cx-role-label">Toolbox</div>
+          <div><h3>SCRAPI：實際動手</h3><p>把 CX 流程拉到本機，修改與檢查後，再安全地送回去。</p></div>
+        </div>
+        <div class="cx-role-card">
+          <div class="cx-role-visual"><div class="cx-role-symbol">CX</div></div>
+          <div class="cx-role-label">Workplace</div>
+          <div><h3>Google CX：工作現場</h3><p>客服機器人的流程圖，決定現在問什麼、下一步往哪裡走。</p></div>
+        </div>
+      </div>
+      <div class="cx-context-summary reveal">PM 只需要面對 Hermes：在 Slack 說需求、看結果、做確認，不必直接操作 SCRAPI。</div>
+      <div class="page-no">11 / 23</div>
+    </section>
+
+    <section class="slide dark visual-story-slide image-right" data-layout="S22" data-title="Hermes 串起 CXAS SCRAPI">
+      <div class="kicker reveal">Case 06 / CX Agent Workflow</div>
+      <h2 class="title reveal">CX 專案亮點：Hermes 把 SCRAPI 變成團隊助理的一隻手</h2>
+      <div class="visual-story-layout">
+        <div class="visual-story-figure reveal"><img src="images/hermes-cxas-scrapi-xiaohei-flow.png" alt="小黑手繪流程圖：Hermes 調度 Slack Ticket，選 Skill，串接 CXAS SCRAPI 工坊，最後 PM GUI 驗證"></div>
+        <div class="visual-story-copy reveal">
+          <div class="visual-story-step"><div class="visual-story-n">01</div><div><strong>接住 Ticket 脈絡</strong><p>Hermes 讀需求與驗收條件，不只接一句指令。</p></div></div>
+          <div class="visual-story-step"><div class="visual-story-n">02</div><div><strong>選 Skill，呼叫 SCRAPI</strong><p>執行 pull、修改、lint-test 與準備推送。</p></div></div>
+          <div class="visual-story-step"><div class="visual-story-n">03</div><div><strong>回到 CX GUI 驗證</strong><p>PM 看實際結果；高風險步驟保留人工確認。</p></div></div>
+          <div class="visual-story-value">這一頁的主角是 Hermes：它把專家工具包成團隊可交辦、可驗證的流程。</div>
+        </div>
+      </div>
+      <div class="page-no">12 / 23</div>
+    </section>
+
+    <section class="slide dark" data-layout="S21" data-title="Fast Verification">
+      <div class="kicker reveal">Case 06 / Fast Verification</div>
+      <h2 class="title reveal">驗證速度，會改變 PM 與工程的協作方式</h2>
+      <div class="grid-12">
+        <div class="card-accent span-4 reveal" style="min-height:46vh;">
+          <div class="label">PM Command</div>
+          <div class="card-title">「幫我處理 AZ-1832，完成後給我驗。」</div>
+          <p class="card-body">PM 不必等待完整排程，先把明確需求推到可驗證狀態。</p>
+        </div>
+        <div class="card-outlined span-4 reveal" style="min-height:46vh;">
+          <div class="label">Agent Work</div>
+          <ul class="list">
+            <li>讀取 Azure ticket 需求與 acceptance criteria。</li>
+            <li>使用 cxas scrapi skill 分析本地檔案。</li>
+            <li>修改程式、產生 diff、push 到 cxas。</li>
+          </ul>
+        </div>
+        <div class="card-outlined span-4 reveal" style="min-height:46vh;">
+          <div class="label">New Collaboration</div>
+          <ul class="list">
+            <li>PM 更快看到實際結果，而不是只看文字描述。</li>
+            <li>工程師把時間留給抽象度更高的設計與 review。</li>
+            <li>高風險變更仍保留人工 gate。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="page-no">13 / 23</div>
+    </section>
+
+    <section class="slide light skill-logic-slide" data-layout="S14" data-title="Skill 自動進化的底層邏輯">
+      <div class="kicker reveal">Under the Hood</div>
+      <h2 class="title reveal">Skill 自動進化的底層邏輯</h2>
+      <div class="logic-canvas reveal">
+        <svg class="logic-connectors" viewBox="0 0 1000 420" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <marker id="logic-arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L8,4 L0,8 Z"></path>
+            </marker>
+          </defs>
+          <path d="M170 68 H210" marker-end="url(#logic-arrowhead)"></path>
+          <path d="M380 68 H430" marker-end="url(#logic-arrowhead)"></path>
+          <path d="M610 68 H650" marker-end="url(#logic-arrowhead)"></path>
+          <path d="M730 120 V180"></path>
+          <path d="M730 180 H95 V227" marker-end="url(#logic-arrowhead)"></path>
+          <path d="M730 180 H295 V227" marker-end="url(#logic-arrowhead)"></path>
+          <path d="M370 280 H410" marker-end="url(#logic-arrowhead)"></path>
+          <path d="M580 280 H620" marker-end="url(#logic-arrowhead)"></path>
+          <path d="M790 280 H820" marker-end="url(#logic-arrowhead)"></path>
+          <path d="M970 280 H992 V390 H8 V68 H20" marker-end="url(#logic-arrowhead)"></path>
+        </svg>
+
+        <div class="logic-node node-a">
+          <div class="logic-id">A · EXECUTE</div>
+          <div class="logic-text">主 Agent<br>執行任務</div>
+        </div>
+        <div class="logic-node node-b">
+          <div class="logic-id">B · TRACE</div>
+          <div class="logic-text">保留對話與<br>Tool Call 軌跡</div>
+        </div>
+        <div class="logic-node node-c">
+          <div class="logic-id">C · REVIEW</div>
+          <div class="logic-text">Background<br>Review Agent</div>
+        </div>
+        <div class="logic-node node-d decision">
+          <div class="logic-id">D · DECIDE</div>
+          <div class="logic-text">值得長期<br>保留？</div>
+        </div>
+        <div class="logic-node node-e memory">
+          <div class="logic-id">E · MEMORY</div>
+          <div class="logic-text">Memory</div>
+        </div>
+        <div class="logic-node node-f skill">
+          <div class="logic-id">F · MANAGE</div>
+          <div class="logic-text">skill_manage</div>
+        </div>
+        <div class="logic-node node-g skill">
+          <div class="logic-id">G · CODIFY</div>
+          <div class="logic-text">建立或 Patch<br>SKILL.md</div>
+        </div>
+        <div class="logic-node node-h skill">
+          <div class="logic-id">H · INDEX</div>
+          <div class="logic-text">索引只載入<br>名稱與描述</div>
+        </div>
+        <div class="logic-node node-i skill">
+          <div class="logic-id">I · LOAD</div>
+          <div class="logic-text">相似任務時<br>skill_view</div>
+        </div>
+
+        <div class="logic-label memory-label">固定資訊／團隊偏好</div>
+        <div class="logic-label skill-label">可重複流程</div>
+        <div class="logic-label return-label">I → A：下一次直接載入已沉澱的程序</div>
+      </div>
+      <p class="skill-logic-note reveal">不是重新訓練模型，而是把成功路徑寫成可檢查、可重用、可持續修正的程序性記憶。</p>
+      <div class="page-no">14 / 23</div>
+    </section>
+
+    <section class="slide light skill-slide" data-layout="S17" data-title="Skill 成長實例">
+      <div class="kicker reveal">Evidence</div>
+      <h2 class="title reveal">實際上，它真的會把成功流程寫成 Skill</h2>
+      <div class="skill-growth reveal">
+        <div>
+          <div class="growth-points">
+            <div class="growth-point">
+              <div class="label">Observe</div>
+              <div class="card-title">先在 Slack 中完成一次任務</div>
+              <p class="mini">Hermes 依使用者問題開網頁、查資料、整理脈絡，完成一次性的協助。</p>
+            </div>
+            <div class="growth-point">
+              <div class="label">Codify</div>
+              <div class="card-title">把有效路徑沉澱成 skill</div>
+              <p class="mini">當它發現這是可重複流程，就產生自我改善紀錄，把 web scraping / extraction 變成可復用能力。</p>
+            </div>
+            <div class="growth-point">
+              <div class="label">Evolve</div>
+              <div class="card-title">下一次更快、更貼近團隊</div>
+              <p class="mini">同類問題再次出現時，不再從零開始，而是沿用已學到的流程與工具。</p>
+            </div>
+          </div>
+          <div class="hairline" style="margin-top:3vh;"></div>
+          <p class="lead" style="font-size:21px; line-height:1.45;">Hermes 的強項不是預先內建很多功能，而是能把團隊反覆發生的雜事，長成團隊自己的 skill。</p>
+        </div>
+        <div class="slack-shots">
+          <div class="slack-shot">
+            <img src="images/slack-skill-growth-1.png" alt="Slack 對話截圖：使用者要求 Hermes 解析新聞，Hermes 開始瀏覽、擷取並整理內容">
+          </div>
+          <div class="slack-shot">
+            <img src="images/slack-skill-growth-2.png" alt="Slack 對話截圖：Hermes 產生 self-improvement review，建立 web scraping and extraction skill">
+          </div>
+        </div>
+      </div>
+      <div class="page-no">15 / 23</div>
+    </section>
+
+    <section class="slide dark ponytail-slide" data-layout="S13" data-title="Hermes × Ponytail">
+      <div class="kicker reveal">Coding Efficiency · Engineering Judgment</div>
+      <h2 class="title reveal">掛上 Ponytail，Hermes 多了一層工程取捨能力</h2>
+      <div class="pt-layout">
+        <figure class="pt-mascot reveal">
+          <div class="pt-brand"><span>HERMES ×</span><strong>Ponytail</strong></div>
+          <img src="images/ponytail-character.png" alt="Ponytail 官方角色：綁著馬尾、戴眼鏡的資深工程師形象">
+          <figcaption class="pt-quote">DO LESS.<br>VERIFY MORE.</figcaption>
+        </figure>
+        <div class="pt-panel reveal">
+          <div class="label">動手前，先走最短可靠路徑</div>
+          <div class="pt-rungs">
+            <div class="pt-rung">
+              <b>01</b>
+              <strong>這真的需要存在嗎？</strong>
+              <span>YAGNI · 可不做就不做</span>
+            </div>
+            <div class="pt-rung">
+              <b>02</b>
+              <strong>團隊已經有了嗎？</strong>
+              <span>優先沿用既有程式與慣例</span>
+            </div>
+            <div class="pt-rung">
+              <b>03</b>
+              <strong>標準能力能完成嗎？</strong>
+              <span>Stdlib / Native · 少一個依賴</span>
+            </div>
+          </div>
+          <div class="pt-result">
+            <strong>輸出更小的 diff，PM 更快驗證，工程更容易 review</strong>
+            <span>→ MINIMUM THAT WORKS</span>
+          </div>
+          <div class="pt-metrics" aria-label="Ponytail 官方 agentic benchmark">
+            <div class="pt-metric"><strong>−54%</strong><span>程式碼行數</span></div>
+            <div class="pt-metric"><strong>−20%</strong><span>執行成本</span></div>
+            <div class="pt-metric"><strong>−27%</strong><span>完成時間</span></div>
+            <div class="pt-metric"><strong>100%</strong><span>安全護欄保留</span></div>
+          </div>
+          <p class="pt-source">Ponytail 官方 agentic benchmark：Haiku 4.5、12 個 feature tasks、n=4；為 Ponytail 效益參考，非本團隊 Hermes 實測。</p>
+        </div>
+      </div>
+      <div class="page-no">18 / 23</div>
+    </section>
+
+    <section class="slide light ponytail-routing-slide" data-layout="S08" data-title="為什麼不能一直開 Ponytail">
+      <div class="kicker reveal">問題與解法</div>
+      <h2 class="title reveal">Ponytail 不該一直開著，只在寫程式時叫它出場</h2>
+      <div class="pt-route-layout">
+        <div class="pt-risk-panel reveal">
+          <div class="pt-risk-intro">
+            <img src="images/ponytail-character.png" alt="Ponytail 官方角色">
+            <div>
+              <div class="label">如果 Ponytail 一直開著</div>
+              <strong>所有問題都會套用同一種思考方式</strong>
+            </div>
+          </div>
+          <div class="pt-risk-list">
+            <div class="pt-risk-item">
+              <b>01</b>
+              <div><strong>一般對話也會被迫極簡</strong><span>會議整理、看板摘要也可能被當成寫程式問題處理。</span></div>
+            </div>
+            <div class="pt-risk-item">
+              <b>02</b>
+              <div><strong>同一台服務上的人會一起受影響</strong><span>有人切換 Ponytail，其他正在使用的對話也可能跟著改變。</span></div>
+            </div>
+            <div class="pt-risk-item">
+              <b>03</b>
+              <div><strong>重要變更可能被簡化過頭</strong><span>架構、資安與資料異動，仍要保留完整評估與人工確認。</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="pt-solution-panel reveal">
+          <div class="label">我們的解法：平常關閉，寫程式時才啟用</div>
+          <div class="pt-router-node">
+            <b>01</b>
+            <strong>Hermes 先判斷：這是不是程式任務？</strong>
+            <span>先分類再決定</span>
+          </div>
+          <div class="pt-route-arrow">↓</div>
+          <div class="pt-route-lanes">
+            <div class="pt-route-lane">
+              <div class="label">不是程式任務</div>
+              <h3>維持一般助理模式</h3>
+              <p>會議整理、看板摘要、Calendar、Miro 與 Ticket 同步。</p>
+              <div class="pt-route-path">直接使用一般 Skills</div>
+            </div>
+            <div class="pt-route-lane is-code">
+              <div class="label">是程式任務</div>
+              <h3>才請 Ponytail 出場</h3>
+              <p>SCRAPI 修改、PR 修正、維護腳本與低風險的小型變更。</p>
+              <div class="pt-route-path">載入 Skill → 子助手執行 → 人工驗證</div>
+            </div>
+          </div>
+          <div class="pt-route-guard">
+            <span>平常關閉</span>
+            <span>寫程式才開</span>
+            <span>最後由人確認</span>
+          </div>
+        </div>
+      </div>
+      <div class="page-no">19 / 23</div>
+    </section>
+
+    <section class="slide light ponytail-proof-slide" data-layout="S17" data-title="三個情境驗證選擇性啟用">
+      <div class="kicker reveal">測試前：務必先在伺服器執行 hermes gateway restart</div>
+      <h2 class="title reveal">重啟 Gateway 後，用三個情境驗證這套設計</h2>
+      <div class="pt-proof-grid">
+        <div class="reveal">
+          <div class="pt-proof-head">
+            <strong>測試 1 · 一般模式</strong>
+            <span>確認預設真的關閉</span>
+          </div>
+          <div class="pt-proof-shot">
+            <img src="images/ponytail-test-baseline.png" alt="Slack 測試截圖：一般 Hermes 撰寫 Email 驗證函式，包含較長 Regex、測試程式與第三方套件建議">
+          </div>
+        </div>
+        <div class="reveal">
+          <div class="pt-proof-head is-active">
+            <strong>測試 2＋3 · 指定載入與子助手</strong>
+            <span>往下捲動查看</span>
+          </div>
+          <div class="pt-proof-shot">
+            <img src="images/ponytail-test-on-demand.png" alt="Slack 測試截圖：Hermes 按需載入 Ponytail，Email 驗證改用標準 re，Subagent 的 Date Picker 改用原生 input date">
+          </div>
+        </div>
+      </div>
+      <div class="pt-proof-findings reveal">
+        <div class="pt-proof-point">
+          <b>測試 1 · 預設關閉</b>
+          <strong>不指定 Ponytail，收到完整程式碼與說明，代表一般模式正常。</strong>
+        </div>
+        <div class="pt-proof-point is-active">
+          <b>測試 2 · 指定載入</b>
+          <strong>載入 ponytail:ponytail 後，答案變短並優先使用內建能力。</strong>
+        </div>
+        <div class="pt-proof-point is-active">
+          <b>測試 3 · 子助手過濾</b>
+          <strong>leaf／developer 子助手命中 PONYTAIL_SUBAGENT_MATCHER，改用原生 input date。</strong>
+        </div>
+      </div>
+      <div class="page-no">20 / 23</div>
+    </section>
+
+    <section class="slide dark pm-story-slide" data-layout="S19" data-title="PM 也能培養 AI 團隊助理">
+      <div class="kicker reveal">No-code Teaching · 4 Scenes</div>
+      <h2 class="title reveal">PM 不用寫程式，也能用對話把助理教得更懂團隊</h2>
+      <div class="pm-storyboard reveal">
+        <div class="pm-scene">
+          <div class="pm-step">01 · 說出需求</div>
+          <div class="pm-visual">
+            <div class="pm-bubble">把會議結論整理成 Ticket，並標上負責人。</div>
+            <div class="pm-bubble is-reply">收到，我先做一次給你確認。</div>
+          </div>
+          <h3>用自然語言交代</h3>
+          <p>PM 不需要寫 Prompt Framework 或自動化腳本。</p>
+        </div>
+        <div class="pm-scene">
+          <div class="pm-step">02 · 示範流程</div>
+          <div class="pm-visual">
+            <div class="pm-mini-flow"><b>Slack</b><i>→</i><b>Hermes</b><i>→</i><b>Azure</b></div>
+          </div>
+          <h3>陪它完成第一次</h3>
+          <p>告訴它資料來源、欄位規則與完成標準。</p>
+        </div>
+        <div class="pm-scene">
+          <div class="pm-step">03 · 回饋修正</div>
+          <div class="pm-visual">
+            <div class="pm-feedback">
+              <del>每一項都直接建立 Ticket</del>
+              <ins>只有明確 Action Item 才建 Ticket，疑問先回 Slack。</ins>
+            </div>
+          </div>
+          <h3>告訴它哪裡不對</h3>
+          <p>這次的修正，也成為下一次的判斷依據。</p>
+        </div>
+        <div class="pm-scene">
+          <div class="pm-step">04 · 沉澱能力</div>
+          <div class="pm-visual">
+            <div class="pm-skill-file"><strong>SKILL.md</strong><span>trigger: meeting summary<br>rule: action item only<br>verify: PM confirms</span></div>
+          </div>
+          <h3>長成團隊自己的 Skill</h3>
+          <p>工程先準備工具與權限，PM 負責教流程、給回饋。</p>
+        </div>
+      </div>
+      <div class="page-no">16 / 23</div>
+    </section>
+
+    <section class="slide light model-route-slide" data-layout="S17" data-title="模型與額度串接">
+      <div class="kicker reveal">Cost Control · Model Routing</div>
+      <h2 class="title reveal">Slack 的一句話，怎麼走到公司的 Vertex AI 額度</h2>
+      <div class="model-pipeline-row reveal">
+        <div class="model-stage">
+          <div class="model-logo">S</div>
+          <strong>Slack</strong>
+          <span>使用者用自然語言交代工作。</span>
+        </div>
+        <div class="model-link"></div>
+        <div class="model-stage">
+          <div class="model-logo">H</div>
+          <strong>Hermes</strong>
+          <span>判斷任務、載入 Skill、準備模型請求。</span>
+        </div>
+        <div class="model-link"></div>
+        <div class="model-stage stage-router">
+          <div class="model-logo">OR</div>
+          <strong>OpenRouter</strong>
+          <span>把模型選擇與工作流程分開。</span>
+        </div>
+        <div class="model-link"></div>
+        <div class="model-stage stage-vertex">
+          <div class="model-logo">V</div>
+          <strong>Vertex AI</strong>
+          <span>使用公司既有模型端點與額度。</span>
+        </div>
+      </div>
+      <div class="model-governance reveal">
+        <div><b>IDENTITY</b><span>公司身份與存取權限</span></div>
+        <div><b>QUOTA</b><span>額度、成本與用量控管</span></div>
+        <div><b>AUDIT</b><span>Request、模型與結果可追蹤</span></div>
+      </div>
+      <div class="cost-footer-strip reveal">
+        <img src="images/vertex-ai-cost-june-2026.png" alt="2026 年 6 月 Vertex AI 每日成本圖，總額 253.05 美元，6 月 18 日單日成本 34.92 美元">
+        <div class="cost-footer-badge"><strong>US$253.05</strong>2026/6 月 · 6/18 高點 US$34.92</div>
+      </div>
+      <div class="page-no">17 / 23</div>
+    </section>
+
+    <section class="slide dark governance-slide" data-layout="S08" data-title="企業導入適配">
+      <div class="kicker reveal">Guardrails</div>
+      <h2 class="title reveal">不是全部放手，而是把工作分成三種權限</h2>
+      <div class="governance-bands reveal">
+        <div class="gov-zone">
+          <div class="gov-symbol">✓</div>
+          <h3>AI 可以直接做</h3>
+          <p>低風險、可重跑、不會改動正式資料。</p>
+          <div class="gov-items">
+            <span>讀取與整理資訊</span>
+            <span>產生摘要與草稿</span>
+            <span>每日看板早報</span>
+          </div>
+        </div>
+        <div class="gov-zone is-notify">
+          <div class="gov-symbol">↗</div>
+          <h3>做完後通知人</h3>
+          <p>規則明確的日常更新，完成後留下紀錄。</p>
+          <div class="gov-items">
+            <span>建立或更新 Ticket</span>
+            <span>更新團隊行事曆</span>
+            <span>Miro 與 Azure 同步</span>
+          </div>
+        </div>
+        <div class="gov-zone is-confirm">
+          <div class="gov-symbol">!</div>
+          <h3>做之前先問人</h3>
+          <p>可能影響程式、敏感資料或正式環境。</p>
+          <div class="gov-items">
+            <span>修改檔案、Push 或 Merge</span>
+            <span>對外傳送敏感內容</span>
+            <span>刪除與不可逆操作</span>
+          </div>
+        </div>
+      </div>
+      <div class="governance-audit reveal">每一步都記錄 REQUEST → SKILL → TOOL CALL → RESULT，方便追蹤、稽核與改善。</div>
+      <div class="page-no">21 / 23</div>
+    </section>
+
+    <section class="slide hero light" data-layout="S09" data-title="人機分工">
+      <div class="kicker reveal">Shift</div>
+      <h2 class="statement reveal">人的工作，是定義意圖與做決策。<br>Agent 的工作，是搬運、整理、執行與回報。</h2>
+      <p class="lead reveal" style="margin-top:5vh;">AI 團隊助理的核心，不是把人移出流程，而是把人放在更高價值的位置。</p>
+      <div class="page-no">22 / 23</div>
+    </section>
+
+    <section class="slide hero dark" data-layout="SWISS-CLOSING-ASCII" data-title="Takeaway">
+      <div class="kicker reveal">Takeaway</div>
+      <h2 class="statement reveal">Hermes 的價值：<br>把團隊雜事變成可追蹤流程。</h2>
+      <p class="lead reveal" style="margin-top:5vh; max-width:780px;">它不是單點專家，而是 AI 團隊助理：接需求、追狀態、串工具、沉澱 skill、讓人保留決策。</p>
+      <div class="grid-12 reveal" style="margin-top:7vh;">
+        <div class="card-outlined span-4">
+          <div class="label">01</div>
+          <div class="card-title">從日常開始</div>
+          <p class="card-body">先自動化高頻、低風險、規則明確的工作。</p>
+        </div>
+        <div class="card-outlined span-4">
+          <div class="label">02</div>
+          <div class="card-title">把流程串起來</div>
+          <p class="card-body">讓 Miro、Azure、Calendar、Slack、repo 成為同一條工作流。</p>
+        </div>
+        <div class="card-outlined span-4">
+          <div class="label">03</div>
+          <div class="card-title">把人放在決策點</div>
+          <p class="card-body">高風險操作保留審核、紀錄、回溯與驗證。</p>
+        </div>
+      </div>
+      <div class="page-no">23 / 23</div>
+    </section>
+  </main>
+
+  <div class="nav" aria-label="slide navigation">
+    <button id="prev" title="上一頁">←</button>
+    <span id="counter">01 / 23</span>
+    <button id="next" title="下一頁">→</button>
+    <button id="fullscreen" title="投影模式">⛶</button>
+    <span class="hint">F FULL · ESC INDEX · B STATIC</span>
+  </div>
+
+  <aside class="index" id="index">
+    <div class="kicker">Index</div>
+    <h2 class="title" style="color:var(--ink); margin-bottom:0;">Hermes Agent · AI 團隊助理</h2>
+    <div class="index-grid" id="indexGrid"></div>
+  </aside>
+
+  <script>
+    const deck = document.getElementById('deck');
+    const governanceSlide = deck.querySelector('[data-title="企業導入適配"]');
+    [
+      'PM 也能培養 AI 團隊助理',
+      '模型與額度串接',
+      'Hermes × Ponytail',
+      '為什麼不能一直開 Ponytail',
+      '三個情境驗證選擇性啟用'
+    ].forEach(title => {
+      const slide = deck.querySelector(`[data-title="${title}"]`);
+      if (slide && governanceSlide) deck.insertBefore(slide, governanceSlide);
+    });
+    const slides = [...document.querySelectorAll('.slide')];
+    const counter = document.getElementById('counter');
+    const index = document.getElementById('index');
+    const indexGrid = document.getElementById('indexGrid');
+    const fullscreenButton = document.getElementById('fullscreen');
+    let current = 0;
+    let lowPower = false;
+
+    function render() {
+      deck.style.transform = `translateX(${-current * 100}vw)`;
+      slides.forEach((slide, i) => slide.classList.toggle('active', i === current));
+      counter.textContent = `${String(current + 1).padStart(2, '0')} / ${String(slides.length).padStart(2, '0')}`;
+    }
+
+    function go(next) {
+      current = Math.max(0, Math.min(slides.length - 1, next));
+      render();
+    }
+
+    document.getElementById('prev').addEventListener('click', () => go(current - 1));
+    document.getElementById('next').addEventListener('click', () => go(current + 1));
+    fullscreenButton.addEventListener('click', toggleFullscreen);
+
+    function toggleFullscreen() {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+        return;
+      }
+      document.documentElement.requestFullscreen?.();
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      fullscreenButton.textContent = document.fullscreenElement ? '×' : '⛶';
+      fullscreenButton.title = document.fullscreenElement ? '離開投影模式' : '投影模式';
+    });
+
+    window.addEventListener('keydown', event => {
+      if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') go(current + 1);
+      if (event.key === 'ArrowLeft' || event.key === 'PageUp') go(current - 1);
+      if (event.key === 'Home') go(0);
+      if (event.key === 'End') go(slides.length - 1);
+      if (event.key === 'Escape') index.classList.toggle('open');
+      if (event.key.toLowerCase() === 'f') toggleFullscreen();
+      if (event.key.toLowerCase() === 'b') setLowPower(!lowPower);
+    });
+
+    let wheelLock = false;
+    window.addEventListener('wheel', event => {
+      if (event.target.closest('.slack-shot, .pt-proof-shot, .cost-footer-strip')) return;
+      if (Math.abs(event.deltaY) < 28 || wheelLock) return;
+      wheelLock = true;
+      go(current + (event.deltaY > 0 ? 1 : -1));
+      setTimeout(() => { wheelLock = false; }, 720);
+    }, { passive: true });
+
+    let startX = null;
+    window.addEventListener('touchstart', event => { startX = event.touches[0].clientX; }, { passive: true });
+    window.addEventListener('touchend', event => {
+      if (startX === null) return;
+      const dx = event.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) > 48) go(current + (dx < 0 ? 1 : -1));
+      startX = null;
+    }, { passive: true });
+
+    indexGrid.innerHTML = slides.map((slide, i) => `
+      <div class="thumb" data-i="${i}">
+        <span class="meta">${String(i + 1).padStart(2, '0')} · ${slide.dataset.layout}</span>
+        <strong>${slide.dataset.title}</strong>
+      </div>
+    `).join('');
+    indexGrid.addEventListener('click', event => {
+      const thumb = event.target.closest('.thumb');
+      if (!thumb) return;
+      index.classList.remove('open');
+      go(Number(thumb.dataset.i));
+    });
+
+    const canvas = document.getElementById('grid-bg');
+    const ctx = canvas.getContext('2d');
+    let raf;
+
+    function resize() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function draw(t = 0) {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      ctx.strokeStyle = 'rgba(10, 132, 255, .04)';
+      ctx.lineWidth = 1;
+      const gap = 36;
+      for (let x = 0; x < window.innerWidth + gap; x += gap) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, window.innerHeight);
+        ctx.stroke();
+      }
+      for (let y = 0; y < window.innerHeight + gap; y += gap) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(window.innerWidth, y);
+        ctx.stroke();
+      }
+
+      const time = lowPower ? 0 : t * 0.00018;
+      const nodes = [
+        [.18, .24, 0],
+        [.72, .18, 2.1],
+        [.84, .64, 4.2],
+        [.34, .76, 1.4],
+        [.58, .46, 3.3]
+      ];
+      for (const [px, py, phase] of nodes) {
+        const pulse = .5 + .5 * Math.sin(time + phase);
+        const x = window.innerWidth * px + Math.sin(time + phase) * 12;
+        const y = window.innerHeight * py + Math.cos(time * 1.2 + phase) * 10;
+        const radius = 90 + pulse * 46;
+        const glow = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        glow.addColorStop(0, `rgba(10,132,255,${0.11 + pulse * 0.05})`);
+        glow.addColorStop(.22, `rgba(47,230,205,${0.045 + pulse * 0.035})`);
+        glow.addColorStop(1, 'rgba(10,132,255,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(255,255,255,${0.26 + pulse * 0.18})`;
+        ctx.beginPath();
+        ctx.arc(x, y, 1.5 + pulse, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (!lowPower) raf = requestAnimationFrame(draw);
+    }
+
+    function setLowPower(enabled) {
+      lowPower = enabled;
+      document.body.classList.toggle('low-power', lowPower);
+      if (lowPower) {
+        cancelAnimationFrame(raf);
+        draw(0);
+      } else {
+        cancelAnimationFrame(raf);
+        draw();
+      }
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    draw();
+    render();
+  </script>
+</body>
+</html>
