@@ -387,18 +387,77 @@
       text-transform: uppercase;
     }
 
-    .attendance-shot {
-      display: grid;
-      place-items: center;
-      min-height: 0;
-      overflow: hidden;
+    .attendance-proof-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 10px;
     }
 
-    .attendance-shot img {
+    .attendance-proof-tabs {
+      display: inline-flex;
+      gap: 2px;
+      padding: 3px;
+      border-radius: 5px;
+      background: rgba(20,32,51,.07);
+    }
+
+    .attendance-proof-tab {
+      min-height: 30px;
+      padding: 0 11px;
+      border: 0;
+      border-radius: 3px;
+      background: transparent;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .attendance-proof-tab.active {
+      background: var(--accent);
+      color: var(--white);
+      box-shadow: 0 4px 12px rgba(10,132,255,.2);
+    }
+
+    .attendance-proof-body {
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(10,132,255,.7) rgba(20,32,51,.08);
+    }
+
+    .attendance-proof-body::-webkit-scrollbar { width: 7px; }
+    .attendance-proof-body::-webkit-scrollbar-track { background: rgba(20,32,51,.08); }
+    .attendance-proof-body::-webkit-scrollbar-thumb {
+      background: rgba(10,132,255,.7);
+      border-radius: 8px;
+    }
+
+    .attendance-proof-panel {
+      display: none;
+      min-height: 100%;
+    }
+
+    .attendance-proof-panel.active {
+      display: grid;
+      place-items: start center;
+    }
+
+    .attendance-proof-panel.is-compact.active { place-items: center; }
+
+    .attendance-proof-panel img {
       width: 100%;
       height: auto;
-      max-height: 100%;
       display: block;
+    }
+
+    .attendance-proof-panel.is-compact img {
+      max-height: 100%;
       object-fit: contain;
     }
 
@@ -2264,11 +2323,11 @@
       <h2 class="title reveal">團隊狀態變成背景自動化</h2>
       <div class="attendance-layout">
         <div class="attendance-steps reveal">
-          <div class="attendance-step"><div class="attendance-n">01</div><strong>自然回報</strong><span>在 Slack 說明請假、WFH 或出差。</span></div>
-          <div class="attendance-step"><div class="attendance-n">02</div><strong>脈絡辨識</strong><span>解析人員、日期、時段與狀態。</span></div>
+          <div class="attendance-step"><div class="attendance-n">01</div><strong>自然交辦</strong><span>用文字或截圖說明請假、會議與提醒。</span></div>
+          <div class="attendance-step"><div class="attendance-n">02</div><strong>理解內容</strong><span>讀取日期、時間、地點、人員與狀態。</span></div>
           <div class="attendance-step"><div class="attendance-n">03</div><strong>必要時補問</strong><span>資訊模糊時才請同仁補充一次。</span></div>
-          <div class="attendance-step"><div class="attendance-n">04</div><strong>同步行事曆</strong><span>寫入團隊 Calendar 並保留來源。</span></div>
-          <div class="attendance-step"><div class="attendance-n">05</div><strong>回到 Slack</strong><span>立即回報完成，讓狀態透明化。</span></div>
+          <div class="attendance-step"><div class="attendance-n">04</div><strong>同步團隊工具</strong><span>更新 Calendar、提醒事項並保留來源。</span></div>
+          <div class="attendance-step"><div class="attendance-n">05</div><strong>回到 Slack</strong><span>回覆摘要與結果，讓團隊狀態透明化。</span></div>
           <div class="attendance-tags">
             <span class="tag">高頻</span>
             <span class="tag">低風險</span>
@@ -2276,9 +2335,18 @@
           </div>
         </div>
         <figure class="attendance-proof reveal">
-          <div class="attendance-proof-label">Real Slack Example</div>
-          <div class="attendance-shot"><img src="images/attendance-slack-proof.png" alt="Slack 實例：Iris 在頻道回報 7 月 16 日下午請假，Hermes 助理立即確認已記錄"></div>
-          <figcaption>一句「7/16 下午請假」，Hermes 就能完成理解、記錄與回覆。</figcaption>
+          <div class="attendance-proof-head">
+            <div class="attendance-proof-label">Real Slack Examples</div>
+            <div class="attendance-proof-tabs" role="tablist" aria-label="Slack 實際案例">
+              <button class="attendance-proof-tab active" type="button" role="tab" aria-selected="true" aria-controls="attendance-proof-leave" data-proof-target="leave" data-proof-caption="一句「7/16 下午請假」，Hermes 就能完成理解、記錄與回覆。">請假回報</button>
+              <button class="attendance-proof-tab" type="button" role="tab" aria-selected="false" aria-controls="attendance-proof-meeting" data-proof-target="meeting" data-proof-caption="丟一張會議截圖，Hermes 也能讀出日期、時間、地點與參與者。">圖片辨識</button>
+            </div>
+          </div>
+          <div class="attendance-proof-body">
+            <div class="attendance-proof-panel is-compact active" id="attendance-proof-leave" role="tabpanel" data-proof-panel="leave"><img src="images/attendance-slack-proof.png" alt="Slack 實例：Iris 在頻道回報 7 月 16 日下午請假，Hermes 助理立即確認已記錄"></div>
+            <div class="attendance-proof-panel" id="attendance-proof-meeting" role="tabpanel" data-proof-panel="meeting"><img src="images/team-meeting-image-proof.png" alt="Slack 實例：Iris 上傳會議邀請截圖，Hermes 辨識出 Chatbot 雙週會的日期、時間、地點與參與者"></div>
+          </div>
+          <figcaption data-proof-caption>一句「7/16 下午請假」，Hermes 就能完成理解、記錄與回覆。</figcaption>
         </figure>
       </div>
       <div class="page-no">06 / 23</div>
@@ -2894,6 +2962,23 @@
     document.getElementById('next').addEventListener('click', () => go(current + 1));
     fullscreenButton.addEventListener('click', toggleFullscreen);
 
+    document.querySelectorAll('.attendance-proof-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const proof = tab.closest('.attendance-proof');
+        const target = tab.dataset.proofTarget;
+        proof.querySelectorAll('.attendance-proof-tab').forEach(item => {
+          const selected = item === tab;
+          item.classList.toggle('active', selected);
+          item.setAttribute('aria-selected', String(selected));
+        });
+        proof.querySelectorAll('.attendance-proof-panel').forEach(panel => {
+          panel.classList.toggle('active', panel.dataset.proofPanel === target);
+        });
+        proof.querySelector('figcaption[data-proof-caption]').textContent = tab.dataset.proofCaption;
+        proof.querySelector('.attendance-proof-body').scrollTop = 0;
+      });
+    });
+
     function toggleFullscreen() {
       if (document.fullscreenElement) {
         document.exitFullscreen();
@@ -2919,7 +3004,7 @@
 
     let wheelLock = false;
     window.addEventListener('wheel', event => {
-      if (event.target.closest('.slack-shot, .pt-proof-shot, .cost-footer-strip')) return;
+      if (event.target.closest('.slack-shot, .pt-proof-shot, .cost-footer-strip, .attendance-proof-body')) return;
       if (Math.abs(event.deltaY) < 28 || wheelLock) return;
       wheelLock = true;
       go(current + (event.deltaY > 0 ? 1 : -1));
