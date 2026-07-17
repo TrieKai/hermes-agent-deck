@@ -371,8 +371,11 @@
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
       min-width: 0;
+      min-height: 0;
+      height: 100%;
       margin: 0;
       padding: 14px;
+      overflow: hidden;
       border: 1px solid rgba(255,255,255,.12);
       border-radius: 6px;
       background: var(--white);
@@ -486,6 +489,187 @@
 
     .vrule { background: var(--line); min-height: 49vh; }
     .dark .vrule { background: rgba(255,255,255,.08); }
+
+    .slide.quality-slide { padding-top: 4.8vh; }
+    .quality-slide .kicker { margin-bottom: 2vh; }
+    .quality-slide .title {
+      max-width: 90vw;
+      margin-bottom: 2.6vh;
+      font-size: min(3.55vw, 6vh);
+    }
+    .quality-pipeline {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 4.2fr) minmax(0, 3fr);
+      gap: 2.4vw;
+      height: 49vh;
+      align-items: stretch;
+    }
+    .quality-stage {
+      position: relative;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      min-width: 0;
+      padding: 22px 24px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255,255,255,.72);
+    }
+    .quality-stage:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: -2.4vw;
+      width: 2.4vw;
+      height: 1px;
+      background: var(--accent);
+    }
+    .quality-stage:not(:last-child)::before {
+      content: "";
+      position: absolute;
+      z-index: 2;
+      top: calc(50% - 4px);
+      right: -2.4vw;
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+      border-left: 7px solid var(--accent);
+    }
+    .quality-stage.ai-stage {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--white);
+    }
+    .quality-stage-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 1.5vh;
+    }
+    .quality-marker {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .ai-stage .quality-marker {
+      border-color: rgba(255,255,255,.28);
+      background: var(--accent);
+      color: var(--white);
+    }
+    .quality-stage-label {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .ai-stage .quality-stage-label { color: rgba(255,255,255,.56); }
+    .quality-stage h3 {
+      margin: 0 0 1.7vh;
+      font-size: 23px;
+      line-height: 1.2;
+    }
+    .quality-visual {
+      display: grid;
+      align-content: center;
+      min-height: 0;
+    }
+    .diff-lines {
+      position: relative;
+      display: grid;
+      gap: 11px;
+      overflow: hidden;
+    }
+    .diff-lines::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 8%;
+      top: 0;
+      height: 2px;
+      background: rgba(10,132,255,.62);
+      box-shadow: 0 7px 18px rgba(10,132,255,.22);
+      opacity: 0;
+      transform: translateY(-14px);
+    }
+    .diff-line {
+      height: 10px;
+      background: var(--fill);
+      transform-origin: left center;
+    }
+    .diff-line.add { width: 86%; border-left: 5px solid #45b97c; }
+    .diff-line.remove { width: 67%; border-left: 5px solid #ff6b57; }
+    .diff-line.short { width: 48%; }
+    .quality-slide.active .diff-line { animation: diff-build .46s cubic-bezier(.2,.72,.25,1) both; }
+    .quality-slide.active .diff-line:nth-child(1) { animation-delay: .38s; }
+    .quality-slide.active .diff-line:nth-child(2) { animation-delay: .48s; }
+    .quality-slide.active .diff-line:nth-child(3) { animation-delay: .58s; }
+    .quality-slide.active .diff-line:nth-child(4) { animation-delay: .68s; }
+    .quality-slide.active .diff-line:nth-child(5) { animation-delay: .78s; }
+    .quality-slide.active .diff-lines::after { animation: diff-scan 1.65s ease-in-out 1.05s both; }
+    @keyframes diff-build {
+      from { opacity: 0; transform: scaleX(.18); }
+      to { opacity: 1; transform: scaleX(1); }
+    }
+    @keyframes diff-scan {
+      0% { opacity: 0; transform: translateY(-14px); }
+      18% { opacity: .85; }
+      82% { opacity: .85; }
+      100% { opacity: 0; transform: translateY(88px); }
+    }
+    .quality-tags {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+    .quality-tag {
+      padding: 11px 10px;
+      border-top: 1px solid rgba(255,255,255,.24);
+      color: rgba(255,255,255,.76);
+      font-size: 15px;
+    }
+    .quality-tag strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--white);
+      font-size: 17px;
+    }
+    .human-focus { display: grid; gap: 14px; }
+    .human-focus div {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .human-focus strong { font-size: 19px; }
+    .human-focus span {
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .quality-takeaway {
+      position: absolute;
+      left: 6vw;
+      right: 6vw;
+      bottom: 5.4vh;
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding-top: 13px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .quality-takeaway strong { color: var(--ink); font-size: 18px; }
 
     .list {
       list-style: none;
@@ -751,95 +935,204 @@
     .slide.case-map .num { font-size: min(5vw, 8vh); }
     .slide.case-map .card-title { margin-bottom: 8px; }
 
-    .slide.skill-logic-slide { padding-top: 4.8vh; }
-    .slide.skill-logic-slide .kicker { margin-bottom: 2vh; }
+    .slide.skill-logic-slide { padding-top: 4.6vh; }
+    .slide.skill-logic-slide .kicker { margin-bottom: 1.8vh; }
     .slide.skill-logic-slide .title {
-      font-size: min(3.6vw, 6.2vh);
-      margin-bottom: 3.2vh;
       max-width: 90vw;
+      margin-bottom: 2.6vh;
+      font-size: min(3.45vw, 5.9vh);
     }
-    .logic-canvas {
+    .evolution-map {
+      display: grid;
+      grid-template-rows: minmax(0, 1.05fr) minmax(0, 1.15fr) auto;
+      gap: 14px;
+      height: 53vh;
+    }
+    .evolution-main {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 2.6vw;
+    }
+    .evolution-step {
       position: relative;
-      width: 88vw;
-      height: 49vh;
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr);
+      gap: 15px;
+      align-items: center;
+      min-width: 0;
+      padding: 16px 18px;
+      border-top: 4px solid var(--ink);
+      background: rgba(255,255,255,.74);
     }
-    .logic-node {
+    .evolution-step:not(:last-child)::after {
+      content: "";
       position: absolute;
-      height: 12.5vh;
-      padding: 18px 16px;
-      border: 1px solid rgba(20, 32, 51, .18);
-      border-radius: 0;
-      background: rgba(255, 255, 255, .76);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      z-index: 2;
-    }
-    .logic-node.node-a { left: 2%; top: 3%; width: 15%; }
-    .logic-node.node-b { left: 21%; top: 3%; width: 17%; }
-    .logic-node.node-c { left: 43%; top: 3%; width: 18%; }
-    .logic-node.node-d { left: 65%; top: 3%; width: 16%; }
-    .logic-node.node-e { left: 2%; top: 54%; width: 15%; }
-    .logic-node.node-f { left: 22%; top: 54%; width: 15%; }
-    .logic-node.node-g { left: 41%; top: 54%; width: 17%; }
-    .logic-node.node-h { left: 62%; top: 54%; width: 17%; }
-    .logic-node.node-i { left: 82%; top: 54%; width: 15%; }
-    .logic-node.decision {
+      top: 50%;
+      right: -2.6vw;
+      width: 2.6vw;
+      height: 1px;
       background: var(--accent);
-      border-color: var(--accent);
+    }
+    .evolution-step:not(:last-child)::before {
+      content: "";
+      position: absolute;
+      z-index: 2;
+      top: calc(50% - 4px);
+      right: -2.6vw;
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+      border-left: 7px solid var(--accent);
+    }
+    .evolution-step.review {
+      border-top-color: var(--accent);
+      background: var(--ink);
       color: var(--white);
     }
-    .logic-node.memory { background: var(--fill); }
-    .logic-node.skill { border-top: 5px solid var(--accent); }
-    .logic-id {
-      font-family: var(--mono);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--muted);
+    .evolution-step.decision {
+      border-top-color: var(--accent);
+      background: var(--accent);
+      color: var(--white);
     }
-    .decision .logic-id { color: rgba(255,255,255,.72); }
-    .logic-text {
-      font-size: 20px;
-      line-height: 1.28;
-      font-weight: 500;
-    }
-    .logic-connectors {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      overflow: visible;
-      z-index: 1;
-    }
-    .logic-connectors path {
-      fill: none;
-      stroke: var(--accent);
-      stroke-width: 2;
-      vector-effect: non-scaling-stroke;
-    }
-    .logic-connectors marker path { fill: var(--accent); }
-    .logic-label {
-      position: absolute;
-      z-index: 3;
-      padding: 4px 8px;
-      background: var(--paper);
-      font-family: var(--mono);
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--muted);
-    }
-    .logic-label.memory-label { left: 7%; top: 42%; }
-    .logic-label.skill-label { left: 35%; top: 42%; }
-    .logic-label.return-label {
-      left: 18%;
-      top: 88%;
+    .evolution-n {
       color: var(--accent);
+      font-family: var(--mono);
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .review .evolution-n, .decision .evolution-n { color: var(--white); }
+    .evolution-step strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 20px;
+    }
+    .evolution-step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.42;
+    }
+    .review p, .decision p { color: rgba(255,255,255,.72); }
+    .evolution-branches {
+      display: grid;
+      grid-template-columns: minmax(0, 2.5fr) minmax(0, 3.5fr) minmax(0, 6fr);
+      gap: 14px;
+    }
+    .evolution-lane {
+      min-width: 0;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--fill);
+    }
+    .evolution-lane.discard-lane { background: rgba(104,105,111,.06); }
+    .evolution-lane.skill-lane {
+      border-color: rgba(10,132,255,.34);
+      background: rgba(10,132,255,.06);
+    }
+    .evolution-lane-label {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .branch-rule {
+      min-height: 45px;
+      margin-bottom: 10px;
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 1.35;
+    }
+    .branch-rule b { color: var(--accent); font-weight: 800; }
+    .lane-outcome {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+    .lane-outcome strong { font-size: 22px; }
+    .lane-outcome span { color: var(--muted); font-size: 12px; }
+    .memory-result {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      padding-top: 13px;
+      border-top: 1px solid var(--line);
+    }
+    .memory-result strong { font-size: 23px; }
+    .memory-result span { color: var(--muted); font-size: 13px; }
+    .skill-rail {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .skill-rail-step {
+      position: relative;
+      min-width: 0;
+      padding-top: 12px;
+      border-top: 1px solid var(--accent);
+    }
+    .skill-rail-step:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      top: 11px;
+      right: -15px;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-weight: 800;
+    }
+    .skill-rail-step span {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .skill-rail-step strong {
+      display: block;
+      font-size: 16px;
+      line-height: 1.25;
+    }
+    .evolution-return {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      padding: 12px 16px;
+      border-left: 5px solid var(--accent);
+      background: var(--ink);
+      color: var(--white);
+    }
+    .evolution-return span {
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .evolution-return strong { font-size: 17px; }
+    .evolution-return em {
+      color: rgba(255,255,255,.6);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-style: normal;
     }
     .skill-logic-note {
       margin-top: 1.2vh;
-      font-size: 19px;
-      line-height: 1.4;
       color: var(--muted);
+      font-size: 16px;
+      line-height: 1.4;
+    }
+    .low-power .diff-line,
+    .low-power .diff-lines::after { animation: none !important; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .quality-slide.active .diff-line,
+      .quality-slide.active .diff-lines::after { animation: none; }
     }
 
     .slide.ponytail-slide { padding-top: 4.6vh; }
@@ -2186,6 +2479,31 @@
       .attendance-step span { font-size:12px; }
       .attendance-proof { height:30vh; margin-top:10px; }
       .attendance-proof figcaption { font-size:12px; }
+      .quality-slide, .skill-logic-slide { overflow-x:hidden; overflow-y:auto; }
+      .quality-pipeline { grid-template-columns:1fr; height:auto; gap:8px; }
+      .quality-stage { min-height:18vh; padding:13px 14px; }
+      .quality-stage:not(:last-child)::before, .quality-stage:not(:last-child)::after { display:none; }
+      .quality-stage h3 { font-size:17px; margin-bottom:8px; }
+      .quality-stage-top { margin-bottom:7px; }
+      .quality-marker { width:38px; height:38px; }
+      .quality-tags { grid-template-columns:1fr 1fr; }
+      .quality-tag { padding:7px 8px; font-size:12px; }
+      .quality-tag strong { font-size:14px; }
+      .quality-takeaway { position:static; margin-top:10px; display:block; font-size:13px; }
+      .quality-takeaway strong { display:block; margin-top:5px; font-size:15px; }
+      .evolution-map { height:auto; grid-template-rows:none; }
+      .evolution-main, .evolution-branches { grid-template-columns:1fr; gap:8px; }
+      .evolution-step { padding:10px 12px; grid-template-columns:42px minmax(0,1fr); }
+      .evolution-step:not(:last-child)::before, .evolution-step:not(:last-child)::after { display:none; }
+      .evolution-n { font-size:21px; }
+      .evolution-step strong { font-size:16px; }
+      .evolution-step p { font-size:12px; }
+      .evolution-lane { padding:11px 12px; }
+      .skill-rail { grid-template-columns:1fr 1fr; gap:9px 18px; }
+      .skill-rail-step:nth-child(2)::after { display:none; }
+      .evolution-return { grid-template-columns:1fr; gap:5px; padding:10px 12px; }
+      .evolution-return strong { font-size:14px; }
+      .skill-logic-note { font-size:13px; }
       .governance-slide { overflow-y:auto; }
       .governance-bands { grid-template-columns:1fr; }
       .gov-zone { min-height:auto; padding:14px; }
@@ -2382,30 +2700,42 @@
       <div class="page-no">08 / 23</div>
     </section>
 
-    <section class="slide light" data-layout="S08" data-title="Quality Layer">
+    <section class="slide light quality-slide" data-layout="S08" data-title="Quality Layer">
       <div class="kicker reveal">Case 04 / Quality Layer</div>
       <h2 class="title reveal">Code Review 從「人力瓶頸」變成「分層品質系統」</h2>
-      <div class="compare reveal">
-        <div>
-          <div class="label">Today</div>
-          <h3 class="card-title">人被例行檢查佔住</h3>
-          <ul class="list">
-            <li>命名、格式、重複邏輯與常見風險反覆出現。</li>
-            <li>PR 初期資訊不足，reviewer 需要來回追問。</li>
-            <li>reviewer 的注意力被消耗在可機械化的第一層檢查。</li>
-          </ul>
-        </div>
-        <div class="vrule"></div>
-        <div>
-          <div class="label">Future</div>
-          <h3 class="card-title">AI 先掃描，人再判斷</h3>
-          <ul class="list">
-            <li>Azure create PR → webhook → Hermes Agent。</li>
-            <li>Agent 拉取 diff、本地 repo context 與相關規範。</li>
-            <li>AI 回寫摘要與風險點，人專注在架構、邏輯與產品影響。</li>
-          </ul>
-        </div>
+      <div class="quality-pipeline reveal">
+        <article class="quality-stage">
+          <div class="quality-stage-top"><div class="quality-marker">PR</div><div class="quality-stage-label">Azure DevOps</div></div>
+          <h3>PR 建立，Webhook 觸發</h3>
+          <div class="quality-visual diff-lines" aria-label="程式碼差異示意">
+            <div class="diff-line add"></div>
+            <div class="diff-line"></div>
+            <div class="diff-line remove"></div>
+            <div class="diff-line short"></div>
+            <div class="diff-line add"></div>
+          </div>
+        </article>
+        <article class="quality-stage ai-stage">
+          <div class="quality-stage-top"><div class="quality-marker">AI</div><div class="quality-stage-label">Hermes Pre-review</div></div>
+          <h3>先讀 Diff、Repo 脈絡與團隊規範</h3>
+          <div class="quality-visual quality-tags">
+            <div class="quality-tag">01<strong>變更摘要</strong></div>
+            <div class="quality-tag">02<strong>常見風險</strong></div>
+            <div class="quality-tag">03<strong>重複邏輯</strong></div>
+            <div class="quality-tag">04<strong>缺漏資訊</strong></div>
+          </div>
+        </article>
+        <article class="quality-stage">
+          <div class="quality-stage-top"><div class="quality-marker">人</div><div class="quality-stage-label">Human Review</div></div>
+          <h3>把注意力留給真正需要判斷的事</h3>
+          <div class="quality-visual human-focus">
+            <div><strong>架構是否合理</strong><span>DESIGN</span></div>
+            <div><strong>邏輯是否正確</strong><span>LOGIC</span></div>
+            <div><strong>產品影響為何</strong><span>IMPACT</span></div>
+          </div>
+        </article>
       </div>
+      <div class="quality-takeaway reveal"><span>AI 不取代 Reviewer，而是接走可機械化的第一輪。</span><strong>機器掃全面，人類判斷深度。</strong></div>
       <div class="page-no">09 / 23</div>
     </section>
 
@@ -2512,66 +2842,51 @@
 
     <section class="slide light skill-logic-slide" data-layout="S14" data-title="Skill 自動進化的底層邏輯">
       <div class="kicker reveal">Under the Hood</div>
-      <h2 class="title reveal">Skill 自動進化的底層邏輯</h2>
-      <div class="logic-canvas reveal">
-        <svg class="logic-connectors" viewBox="0 0 1000 420" preserveAspectRatio="none" aria-hidden="true">
-          <defs>
-            <marker id="logic-arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-              <path d="M0,0 L8,4 L0,8 Z"></path>
-            </marker>
-          </defs>
-          <path d="M170 68 H210" marker-end="url(#logic-arrowhead)"></path>
-          <path d="M380 68 H430" marker-end="url(#logic-arrowhead)"></path>
-          <path d="M610 68 H650" marker-end="url(#logic-arrowhead)"></path>
-          <path d="M730 120 V180"></path>
-          <path d="M730 180 H95 V227" marker-end="url(#logic-arrowhead)"></path>
-          <path d="M730 180 H295 V227" marker-end="url(#logic-arrowhead)"></path>
-          <path d="M370 280 H410" marker-end="url(#logic-arrowhead)"></path>
-          <path d="M580 280 H620" marker-end="url(#logic-arrowhead)"></path>
-          <path d="M790 280 H820" marker-end="url(#logic-arrowhead)"></path>
-          <path d="M970 280 H992 V390 H8 V68 H20" marker-end="url(#logic-arrowhead)"></path>
-        </svg>
-
-        <div class="logic-node node-a">
-          <div class="logic-id">A · EXECUTE</div>
-          <div class="logic-text">主 Agent<br>執行任務</div>
-        </div>
-        <div class="logic-node node-b">
-          <div class="logic-id">B · TRACE</div>
-          <div class="logic-text">保留對話與<br>Tool Call 軌跡</div>
-        </div>
-        <div class="logic-node node-c">
-          <div class="logic-id">C · REVIEW</div>
-          <div class="logic-text">Background<br>Review Agent</div>
-        </div>
-        <div class="logic-node node-d decision">
-          <div class="logic-id">D · DECIDE</div>
-          <div class="logic-text">值得長期<br>保留？</div>
-        </div>
-        <div class="logic-node node-e memory">
-          <div class="logic-id">E · MEMORY</div>
-          <div class="logic-text">Memory</div>
-        </div>
-        <div class="logic-node node-f skill">
-          <div class="logic-id">F · MANAGE</div>
-          <div class="logic-text">skill_manage</div>
-        </div>
-        <div class="logic-node node-g skill">
-          <div class="logic-id">G · CODIFY</div>
-          <div class="logic-text">建立或 Patch<br>SKILL.md</div>
-        </div>
-        <div class="logic-node node-h skill">
-          <div class="logic-id">H · INDEX</div>
-          <div class="logic-text">索引只載入<br>名稱與描述</div>
-        </div>
-        <div class="logic-node node-i skill">
-          <div class="logic-id">I · LOAD</div>
-          <div class="logic-text">相似任務時<br>skill_view</div>
+      <h2 class="title reveal">一次成功，如何變成下一次可直接使用的 Skill？</h2>
+      <div class="evolution-map reveal">
+        <div class="evolution-main">
+          <article class="evolution-step">
+            <div class="evolution-n">01</div>
+            <div><strong>執行任務</strong><p>主 Agent 完成工作，同時保留對話與 Tool Call 軌跡。</p></div>
+          </article>
+          <article class="evolution-step review">
+            <div class="evolution-n">02</div>
+            <div><strong>背景複盤</strong><p>Background Review Agent 檢查這次成功路徑是否值得長期保留。</p></div>
+          </article>
+          <article class="evolution-step decision">
+            <div class="evolution-n">03</div>
+            <div><strong>值得長期保留嗎？</strong><p>先排除一次性內容，再判斷留下的是「資訊」還是「做法」。</p></div>
+          </article>
         </div>
 
-        <div class="logic-label memory-label">固定資訊／團隊偏好</div>
-        <div class="logic-label skill-label">可重複流程</div>
-        <div class="logic-label return-label">I → A：下一次直接載入已沉澱的程序</div>
+        <div class="evolution-branches">
+          <section class="evolution-lane discard-lane">
+            <div class="evolution-lane-label">一次性／沒有重用價值</div>
+            <div class="branch-rule"><b>IF</b> 只是這次回答、偶發結果或不穩定做法</div>
+            <div class="lane-outcome"><strong>不保存</strong><span>此次結束</span></div>
+          </section>
+          <section class="evolution-lane memory-lane">
+            <div class="evolution-lane-label">記住「什麼」</div>
+            <div class="branch-rule"><b>IF</b> 是名稱、專案資訊、團隊慣例或個人偏好</div>
+            <div class="lane-outcome"><strong>Memory</strong><span>補足未來脈絡</span></div>
+          </section>
+          <section class="evolution-lane skill-lane">
+            <div class="evolution-lane-label">記住「怎麼做」</div>
+            <div class="branch-rule"><b>IF</b> 有可重複步驟、工具順序與可驗證的成功條件</div>
+            <div class="skill-rail">
+              <div class="skill-rail-step"><span>MANAGE</span><strong>skill_manage</strong></div>
+              <div class="skill-rail-step"><span>CODIFY</span><strong>建立或 Patch<br>SKILL.md</strong></div>
+              <div class="skill-rail-step"><span>INDEX</span><strong>只索引名稱<br>與描述</strong></div>
+              <div class="skill-rail-step"><span>LOAD</span><strong>相似任務時<br>skill_view</strong></div>
+            </div>
+          </section>
+        </div>
+
+        <div class="evolution-return">
+          <span>04 / NEXT TASK</span>
+          <strong>下一次任務：Memory 補充脈絡；相似流程則用 skill_view 載入做法。</strong>
+          <em>context + procedure → Agent</em>
+        </div>
       </div>
       <p class="skill-logic-note reveal">不是重新訓練模型，而是把成功路徑寫成可檢查、可重用、可持續修正的程序性記憶。</p>
       <div class="page-no">14 / 23</div>
@@ -3105,7 +3420,10 @@
       }
     }
 
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', () => {
+      resize();
+      render();
+    });
     resize();
     draw();
     render();
