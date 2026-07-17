@@ -311,6 +311,149 @@
 
     .dark .flow-body { color: var(--dark-muted); }
 
+    .slide.handoff-slide { padding-top: 4.8vh; }
+    .handoff-slide .kicker { margin-bottom: 2vh; }
+    .handoff-slide .title {
+      max-width: 91vw;
+      margin-bottom: 2.5vh;
+      font-size: min(3.5vw, 5.9vh);
+    }
+    .handoff-board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      height: 55vh;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .handoff-scene {
+      position: relative;
+      min-width: 0;
+      padding: 16px 20px;
+      border-left: 1px solid var(--line);
+    }
+    .handoff-scene:first-child { border-left: 0; padding-left: 0; }
+    .handoff-scene:last-child { padding-right: 0; }
+    .handoff-scene:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      top: 22vh;
+      right: -14px;
+      z-index: 3;
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--paper);
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 19px;
+      font-weight: 800;
+    }
+    .handoff-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .handoff-meta b { color: var(--accent); }
+    .handoff-visual {
+      height: 29vh;
+      margin: 1.4vh 0 1.6vh;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--white);
+    }
+    .handoff-scene h3 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.22;
+    }
+    .handoff-scene > p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .miro-mock {
+      position: relative;
+      background-color: #fbfbf7;
+      background-image: radial-gradient(rgba(23,21,22,.14) .7px, transparent .7px);
+      background-size: 13px 13px;
+    }
+    .miro-note {
+      position: absolute;
+      width: 42%;
+      min-height: 64px;
+      padding: 12px;
+      box-shadow: 0 9px 18px rgba(20,32,51,.1);
+      color: #2c2b2b;
+      font-size: 13px;
+      font-weight: 650;
+      line-height: 1.3;
+    }
+    .miro-note.a { left: 10%; top: 18%; background:#ffe780; transform:rotate(-2deg); }
+    .miro-note.b { right: 8%; top: 38%; background:#ffc9d8; transform:rotate(2deg); }
+    .miro-note.c { left: 20%; bottom: 8%; background:#c7eee3; transform:rotate(1deg); }
+    .hermes-transform {
+      display: grid;
+      align-content: center;
+      gap: 12px;
+      padding: 18px;
+      background: var(--ink);
+      color: var(--white);
+    }
+    .transform-core {
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--accent);
+      font-family: var(--mono);
+      font-weight: 800;
+    }
+    .transform-field {
+      display: grid;
+      grid-template-columns: 88px minmax(0,1fr);
+      gap: 10px;
+      padding-top: 9px;
+      border-top: 1px solid rgba(255,255,255,.18);
+      font-size: 12px;
+    }
+    .transform-field span { color: rgba(255,255,255,.5); font-family:var(--mono); }
+    .azure-ticket {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 16px;
+      border-top: 5px solid #1683d8;
+    }
+    .ticket-id { color:#1683d8; font-family:var(--mono); font-size:12px; font-weight:800; }
+    .ticket-title { margin-top:12px; font-size:18px; font-weight:700; line-height:1.3; }
+    .ticket-fields { display:grid; gap:8px; align-content:center; }
+    .ticket-fields div { display:flex; justify-content:space-between; padding-top:8px; border-top:1px solid var(--line); font-size:12px; }
+    .ticket-fields span { color:var(--muted); }
+    .ticket-status { justify-self:start; padding:5px 8px; border-radius:4px; background:#e9f7f1; color:#16885f; font-family:var(--mono); font-size:11px; font-weight:800; }
+    .slack-confirm {
+      display: grid;
+      align-content: center;
+      gap: 14px;
+      padding: 18px;
+      background: #f8f8f8;
+    }
+    .slack-user { display:flex; align-items:center; gap:10px; }
+    .slack-avatar { display:grid; place-items:center; width:38px; height:38px; border-radius:8px; background:#dff5ef; color:#16885f; font-weight:800; }
+    .slack-user strong { font-size:14px; }
+    .slack-user span { display:block; margin-top:2px; color:var(--muted); font-size:11px; }
+    .slack-bubble { padding:12px 14px; border-left:4px solid var(--accent); background:var(--white); font-size:13px; line-height:1.45; }
+    .slack-link { color:#0b66c3; font-weight:700; }
+
     .slide.attendance-slide { padding-top: 4.8vh; }
     .attendance-slide .kicker { margin-bottom: 2vh; }
     .attendance-slide .title {
@@ -1935,29 +2078,30 @@
     }
 
     .model-route-slide .model-stage {
-      min-height: 17vh;
-      padding: 17px 18px;
+      min-height: 14vh;
+      padding: 13px 16px;
     }
 
+    .model-route-slide .model-logo { width: 43px; height: 43px; font-size: 12px; }
+
     .model-route-slide .model-stage strong {
-      margin-top: 11px;
-      font-size: 21px;
+      margin-top: 8px;
+      font-size: 19px;
     }
 
     .model-route-slide .model-stage span {
-      margin-top: 5px;
-      font-size: 13px;
+      margin-top: 4px;
+      font-size: 12px;
     }
 
-    .model-route-slide .model-governance { margin-top: 1.8vh; }
-    .model-route-slide .model-governance div { padding: 9px 16px; }
+    .model-route-slide .model-governance { margin-top: 1.3vh; }
+    .model-route-slide .model-governance div { padding: 7px 14px; }
 
     .cost-footer-strip {
       position: relative;
-      height: 30vh;
-      margin-top: 1.7vh;
-      overflow-x: hidden;
-      overflow-y: auto;
+      height: 35vh;
+      margin-top: 1.3vh;
+      overflow: hidden;
       overscroll-behavior: contain;
       scrollbar-width: thin;
       scrollbar-color: rgba(10,132,255,.72) rgba(20,32,51,.08);
@@ -1969,9 +2113,62 @@
 
     .cost-footer-strip img {
       width: 100%;
-      height: auto;
+      height: 100%;
+      object-fit: contain;
       display: block;
     }
+
+    .slide.pilot-slide { padding-top: 5vh; }
+    .pilot-slide .kicker { margin-bottom: 2vh; }
+    .pilot-slide .title {
+      max-width: 88vw;
+      margin-bottom: 3.2vh;
+      font-size: min(3.9vw, 6.6vh);
+    }
+    .pilot-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 3.2fr) minmax(0, 8.8fr);
+      gap: 4vw;
+      height: 45vh;
+      align-items: stretch;
+    }
+    .pilot-focus {
+      display: grid;
+      align-content: center;
+      padding-right: 3vw;
+      border-right: 1px solid var(--line);
+    }
+    .pilot-number { color:var(--accent); font-size:min(10vw,17vh); font-weight:500; line-height:.8; }
+    .pilot-focus strong { margin-top:20px; font-size:27px; line-height:1.2; }
+    .pilot-focus p { margin:10px 0 0; color:var(--muted); font-size:15px; line-height:1.45; }
+    .pilot-criteria { display:grid; grid-template-rows:repeat(3,minmax(0,1fr)); }
+    .pilot-criterion {
+      display:grid;
+      grid-template-columns:54px 150px minmax(0,1fr);
+      gap:18px;
+      align-items:center;
+      border-bottom:1px solid var(--line);
+    }
+    .pilot-criterion:first-child { border-top:1px solid var(--line); }
+    .pilot-check { display:grid; place-items:center; width:42px; height:42px; border-radius:50%; background:var(--accent); color:var(--white); font-weight:800; }
+    .pilot-criterion strong { font-size:21px; }
+    .pilot-criterion span { color:var(--muted); font-size:15px; line-height:1.4; }
+    .pilot-ramp {
+      position:absolute;
+      left:6vw;
+      right:6vw;
+      bottom:5.5vh;
+      display:grid;
+      grid-template-columns:auto 1fr auto 1fr auto;
+      gap:14px;
+      align-items:center;
+      color:var(--muted);
+      font-family:var(--mono);
+      font-size:12px;
+      font-weight:700;
+    }
+    .pilot-ramp i { height:1px; background:var(--accent); }
+    .pilot-ramp b { color:var(--ink); font-size:14px; }
 
     .cost-footer-strip::-webkit-scrollbar { width: 8px; }
     .cost-footer-strip::-webkit-scrollbar-track { background: rgba(20,32,51,.08); }
@@ -2491,6 +2688,25 @@
       .quality-tag strong { font-size:14px; }
       .quality-takeaway { position:static; margin-top:10px; display:block; font-size:13px; }
       .quality-takeaway strong { display:block; margin-top:5px; font-size:15px; }
+      .handoff-slide, .pilot-slide { overflow-x:hidden; overflow-y:auto; }
+      .handoff-board { grid-template-columns:1fr 1fr; height:auto; }
+      .handoff-scene { padding:10px; border-bottom:1px solid var(--line); }
+      .handoff-scene:first-child { padding-left:10px; }
+      .handoff-scene:last-child { padding-right:10px; }
+      .handoff-scene:not(:last-child)::after { display:none; }
+      .handoff-visual { height:18vh; margin:7px 0 8px; }
+      .handoff-scene h3 { font-size:15px; }
+      .handoff-scene > p { font-size:11px; }
+      .miro-note { min-height:44px; padding:7px; font-size:10px; }
+      .hermes-transform { gap:6px; padding:10px; }
+      .transform-core { width:36px; height:36px; }
+      .transform-field { grid-template-columns:68px 1fr; padding-top:5px; font-size:9px; }
+      .azure-ticket { padding:10px; }
+      .ticket-title { margin-top:6px; font-size:13px; }
+      .ticket-fields { gap:4px; }
+      .ticket-fields div { padding-top:4px; font-size:9px; }
+      .slack-confirm { gap:8px; padding:10px; }
+      .slack-bubble { padding:8px; font-size:10px; }
       .evolution-map { height:auto; grid-template-rows:none; }
       .evolution-main, .evolution-branches { grid-template-columns:1fr; gap:8px; }
       .evolution-step { padding:10px 12px; grid-template-columns:42px minmax(0,1fr); }
@@ -2504,6 +2720,19 @@
       .evolution-return { grid-template-columns:1fr; gap:5px; padding:10px 12px; }
       .evolution-return strong { font-size:14px; }
       .skill-logic-note { font-size:13px; }
+      .pilot-layout { display:block; height:auto; }
+      .pilot-focus { padding:0 0 10px; border-right:0; border-bottom:1px solid var(--line); }
+      .pilot-number { font-size:17vw; }
+      .pilot-focus strong { margin-top:8px; font-size:20px; }
+      .pilot-focus p { font-size:12px; }
+      .pilot-criterion { grid-template-columns:40px 82px minmax(0,1fr); gap:10px; padding:8px 0; }
+      .pilot-check { width:34px; height:34px; }
+      .pilot-criterion strong { font-size:16px; }
+      .pilot-criterion span { font-size:12px; }
+      .pilot-ramp { position:static; margin-top:12px; grid-template-columns:auto 1fr auto 1fr auto; gap:6px; font-size:9px; }
+      .pilot-ramp b { font-size:10px; }
+      .cost-footer-badge { right:7px; top:7px; padding:6px 8px; font-size:9px; }
+      .cost-footer-badge strong { font-size:15px; }
       .governance-slide { overflow-y:auto; }
       .governance-bands { grid-template-columns:1fr; }
       .gov-zone { min-height:auto; padding:14px; }
@@ -2739,35 +2968,50 @@
       <div class="page-no">09 / 23</div>
     </section>
 
-    <section class="slide light" data-layout="S11" data-title="Continuous Handoff">
+    <section class="slide light handoff-slide" data-layout="S11" data-title="Continuous Handoff">
       <div class="kicker reveal">Case 05 / Continuous Handoff</div>
       <h2 class="title reveal">需求交接從一次性搬運，變成連續同步</h2>
-      <div class="flow reveal">
-        <div class="flow-step">
-          <div class="flow-n">01</div>
-          <div class="flow-title">需求形成</div>
-          <p class="flow-body">PM / BA 在 Miro 中整理 story、流程與討論痕跡。</p>
-        </div>
-        <div class="flow-step">
-          <div class="flow-n">02</div>
-          <div class="flow-title">脈絡保留</div>
-          <p class="flow-body">Agent 讀取指定 story、關聯便條與上下文。</p>
-        </div>
-        <div class="flow-step">
-          <div class="flow-n">03</div>
-          <div class="flow-title">結構化</div>
-          <p class="flow-body">整理 title、description、acceptance criteria、tags。</p>
-        </div>
-        <div class="flow-step">
-          <div class="flow-n">04</div>
-          <div class="flow-title">進入追蹤</div>
-          <p class="flow-body">建立 Azure ticket，保留來源連結與同步狀態。</p>
-        </div>
-        <div class="flow-step">
-          <div class="flow-n">05</div>
-          <div class="flow-title">回到現場</div>
-          <p class="flow-body">在 Slack 貼上 ticket link 與需要補齊的欄位。</p>
-        </div>
+      <div class="handoff-board reveal">
+        <article class="handoff-scene">
+          <div class="handoff-meta"><b>01</b><span>Miro Story</span></div>
+          <div class="handoff-visual miro-mock">
+            <div class="miro-note a">使用者想查詢帳單狀態</div>
+            <div class="miro-note b">需要登入後才能查看</div>
+            <div class="miro-note c">驗收：顯示最新一期</div>
+          </div>
+          <h3>PM 在 Miro 整理需求</h3>
+          <p>便條、流程與討論脈絡留在原本的工作現場。</p>
+        </article>
+        <article class="handoff-scene">
+          <div class="handoff-meta"><b>02</b><span>Hermes</span></div>
+          <div class="handoff-visual hermes-transform">
+            <div class="transform-core">H</div>
+            <div class="transform-field"><span>TITLE</span><b>查詢帳單狀態</b></div>
+            <div class="transform-field"><span>ACCEPTANCE</span><b>登入後顯示最新一期</b></div>
+            <div class="transform-field"><span>SOURCE</span><b>Miro Story Link</b></div>
+          </div>
+          <h3>Hermes 保留脈絡並結構化</h3>
+          <p>整理標題、描述、驗收條件與來源連結。</p>
+        </article>
+        <article class="handoff-scene">
+          <div class="handoff-meta"><b>03</b><span>Azure DevOps</span></div>
+          <div class="handoff-visual azure-ticket">
+            <div><div class="ticket-id">USER STORY · US-241</div><div class="ticket-title">查詢帳單狀態</div></div>
+            <div class="ticket-fields"><div><span>Owner</span><b>CX Team</b></div><div><span>Tag</span><b>billing</b></div><div><span>Source</span><b>Miro ↗</b></div></div>
+            <div class="ticket-status">NEW</div>
+          </div>
+          <h3>建立可追蹤的 Azure Ticket</h3>
+          <p>需求正式進入看板，不再只是散落的便條。</p>
+        </article>
+        <article class="handoff-scene">
+          <div class="handoff-meta"><b>04</b><span>Slack</span></div>
+          <div class="handoff-visual slack-confirm">
+            <div class="slack-user"><div class="slack-avatar">H</div><div><strong>Hermes Agent</strong><span>just now</span></div></div>
+            <div class="slack-bubble">已建立 Azure Ticket：<br><span class="slack-link">US-241 · 查詢帳單狀態</span><br>仍缺少預計完成日期，是否補上？</div>
+          </div>
+          <h3>結果回到 Slack</h3>
+          <p>附上 ticket link，並只追問真正缺少的欄位。</p>
+        </article>
       </div>
       <div class="page-no">10 / 23</div>
     </section>
@@ -3195,10 +3439,22 @@
       <div class="page-no">21 / 23</div>
     </section>
 
-    <section class="slide hero light" data-layout="S09" data-title="人機分工">
-      <div class="kicker reveal">Shift</div>
-      <h2 class="statement reveal">人的工作，是定義意圖與做決策。<br>Agent 的工作，是搬運、整理、執行與回報。</h2>
-      <p class="lead reveal" style="margin-top:5vh;">AI 團隊助理的核心，不是把人移出流程，而是把人放在更高價值的位置。</p>
+    <section class="slide light pilot-slide" data-layout="S09" data-title="從一條流程開始">
+      <div class="kicker reveal">Start Small</div>
+      <h2 class="title reveal">先別做全能助理<br>從一件每天都會發生的事開始</h2>
+      <div class="pilot-layout reveal">
+        <div class="pilot-focus">
+          <div class="pilot-number">01</div>
+          <strong>先選一條流程</strong>
+          <p>目標不是一次導入所有能力，而是先建立一個團隊真的會持續使用的成功案例。</p>
+        </div>
+        <div class="pilot-criteria">
+          <div class="pilot-criterion"><div class="pilot-check">✓</div><strong>高頻</strong><span>每週反覆發生，團隊已經厭倦手動搬運與提醒。</span></div>
+          <div class="pilot-criterion"><div class="pilot-check">✓</div><strong>低風險</strong><span>做錯可以重跑，且不會直接影響正式環境或敏感資料。</span></div>
+          <div class="pilot-criterion"><div class="pilot-check">✓</div><strong>規則明確</strong><span>輸入、完成條件與需要人工確認的位置都說得清楚。</span></div>
+        </div>
+      </div>
+      <div class="pilot-ramp reveal"><b>選流程</b><i></i><b>定義確認點</b><i></i><b>每週回顧並修正 Skill</b></div>
       <div class="page-no">22 / 23</div>
     </section>
 
