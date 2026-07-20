@@ -1770,12 +1770,15 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 210px;
-      height: 116px;
+      width: 250px;
+      height: 124px;
       transform: translate(-50%, -50%);
       display: grid;
-      place-items: center;
-      text-align: center;
+      grid-template-columns: 58px minmax(0, 1fr);
+      gap: 13px;
+      align-items: center;
+      padding: 14px 16px;
+      text-align: left;
       border-radius: 6px;
       background: var(--accent);
       color: var(--white);
@@ -1783,7 +1786,18 @@
       z-index: 2;
     }
 
-    .case-core strong { font-size: 27px; font-weight: 650; }
+    .case-core-avatar {
+      width: 58px;
+      height: 58px;
+      display: block;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,.72);
+      border-radius: 50%;
+      background: var(--white);
+      box-shadow: 0 8px 18px rgba(20,32,51,.18);
+    }
+
+    .case-core strong { display:block; font-size: 25px; font-weight: 650; }
     .case-core span {
       display: block;
       margin-top: 6px;
@@ -2331,12 +2345,86 @@
       object-fit: contain;
     }
 
+    .visual-story-figure.is-slack-proof {
+      position: relative;
+      background: #f7f7f7;
+    }
+
+    .visual-story-figure.is-slack-proof img {
+      object-fit: cover;
+      object-position: left top;
+    }
+
+    .slack-proof-label {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      padding: 7px 10px;
+      border: 1px solid rgba(10,132,255,.22);
+      border-radius: 4px;
+      background: rgba(255,255,255,.9);
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 800;
+      box-shadow: 0 8px 20px rgba(20,32,51,.12);
+    }
+
     .visual-story-copy {
       display: grid;
       grid-template-rows: repeat(3, minmax(0, 1fr)) auto;
       min-width: 0;
       border-top: 1px solid rgba(255,255,255,.16);
     }
+
+    .afa-intro-slide .visual-story-copy {
+      grid-template-rows: auto repeat(3, minmax(0, 1fr)) auto;
+    }
+
+    .afa-identity {
+      display: grid;
+      grid-template-columns: 70px minmax(0, 1fr);
+      gap: 15px;
+      align-items: center;
+      padding: .65vh 0;
+      border-bottom: 1px solid rgba(255,255,255,.13);
+    }
+
+    .afa-avatar {
+      width: 70px;
+      height: 70px;
+      display: block;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,.7);
+      border-radius: 50%;
+      background: var(--white);
+      box-shadow: 0 12px 26px rgba(0,0,0,.2);
+    }
+
+    .afa-role {
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .afa-name {
+      display: block;
+      margin-top: 4px;
+      color: var(--white);
+      font-size: 25px;
+      line-height: 1.12;
+      font-weight: 700;
+    }
+
+    .afa-intro-slide .visual-story-step {
+      padding: .8vh 0;
+    }
+
+    .afa-intro-slide .visual-story-step strong { font-size: 17px; }
+    .afa-intro-slide .visual-story-step p { font-size: 13px; }
 
     .visual-story-step {
       display: grid;
@@ -2640,7 +2728,10 @@
       .case-hub { display:grid; grid-template-columns:1fr 1fr; gap:8px; height:auto; }
       .case-connectors { display:none; }
       .case-core, .case-node { position:static; width:auto; min-height:auto; transform:none; }
-      .case-core { grid-column:1 / -1; height:72px; }
+      .case-core { grid-column:1 / -1; grid-template-columns:46px minmax(0,1fr); height:76px; padding:9px 12px; }
+      .case-core-avatar { width:46px; height:46px; }
+      .case-core strong { font-size:21px; }
+      .case-core span { margin-top:3px; font-size:11px; }
       .case-node { padding:10px; grid-template-columns:38px minmax(0,1fr); }
       .case-mark { width:36px; height:36px; }
       .pm-storyboard { grid-template-columns:1fr 1fr; height:auto; }
@@ -2664,6 +2755,9 @@
       .visual-story-layout { grid-template-columns:1fr; height:auto; }
       .visual-story-figure { height:28vh; order:1 !important; }
       .visual-story-copy { grid-template-rows:none; order:2 !important; }
+      .afa-identity { grid-template-columns:52px minmax(0,1fr); gap:10px; padding:8px 0; }
+      .afa-avatar { width:52px; height:52px; }
+      .afa-name { font-size:21px; }
       .visual-story-step { padding:8px 0; }
       .visual-story-step strong { font-size:16px; }
       .visual-story-step p { font-size:12px; }
@@ -2807,16 +2901,20 @@
       <div class="page-no">03 / 23</div>
     </section>
 
-    <section class="slide dark visual-story-slide" data-layout="S17" data-title="Slack 裡的 AI 團隊助理">
+    <section class="slide dark visual-story-slide afa-intro-slide" data-layout="S17" data-title="Slack 裡的 AI 團隊助理">
       <div class="kicker reveal">Operating Model</div>
-      <h2 class="title reveal">Hermes 是 Slack 裡的 AI 團隊助理</h2>
+      <h2 class="title reveal">認識我們的 AI 團隊助理：Afa醬</h2>
       <div class="visual-story-layout">
         <div class="visual-story-figure reveal"><img src="images/04-hermes-xiaohei-flow.png" alt="小黑手繪 Hermes 流程圖：Slack 需求經 Hermes、OpenRouter、Vertex AI、Skill、工具動作與 GUI 驗證"></div>
         <div class="visual-story-copy reveal">
-          <div class="visual-story-step"><div class="visual-story-n">01</div><div><strong>Slack 是團隊入口</strong><p>像交辦同事一樣，用自然語言說需求。</p></div></div>
-          <div class="visual-story-step"><div class="visual-story-n">02</div><div><strong>Hermes 判斷怎麼做</strong><p>理解脈絡，選擇 Skill、模型與工具。</p></div></div>
-          <div class="visual-story-step"><div class="visual-story-n">03</div><div><strong>結果回到工作現場</strong><p>在 Slack 或 GUI 回報，讓人檢查與確認。</p></div></div>
-          <div class="visual-story-value">重點不是單一能力，而是把多種工具串成一位團隊助理。</div>
+          <div class="afa-identity">
+            <img class="afa-avatar" src="images/04-afa-assistant.jpg" alt="團隊 AI 助理 Afa醬">
+            <div><span class="afa-role">Team AI Assistant</span><strong class="afa-name">Afa醬</strong></div>
+          </div>
+          <div class="visual-story-step"><div class="visual-story-n">01</div><div><strong>在 Slack 接收需求</strong><p>像交辦同事一樣，用自然語言說需求。</p></div></div>
+          <div class="visual-story-step"><div class="visual-story-n">02</div><div><strong>Hermes 選 Skill 與工具</strong><p>理解脈絡，再決定模型與執行方式。</p></div></div>
+          <div class="visual-story-step"><div class="visual-story-n">03</div><div><strong>執行後回報團隊</strong><p>結果回到 Slack 或 GUI，讓人檢查與確認。</p></div></div>
+          <div class="visual-story-value">Afa醬不是單一功能，而是由 Hermes、Skill、模型與工具組成的工作系統。</div>
         </div>
       </div>
       <div class="page-no">04 / 23</div>
@@ -2824,7 +2922,7 @@
 
     <section class="slide light case-hub-slide" data-layout="S04" data-title="六個應用場景">
       <div class="kicker reveal">Case Map</div>
-      <h2 class="title reveal">Hermes 在中間，接住六種不同的團隊工作</h2>
+      <h2 class="title reveal">Afa醬在中間，接住六種不同的團隊工作</h2>
       <div class="case-hub reveal">
         <svg class="case-connectors" viewBox="0 0 1200 580" preserveAspectRatio="none" aria-hidden="true">
           <line x1="600" y1="290" x2="150" y2="70"></line>
@@ -2835,7 +2933,8 @@
           <line x1="600" y1="290" x2="1050" y2="510"></line>
         </svg>
         <div class="case-core">
-          <div><strong>Hermes</strong><span>接需求 → 選 Skill → 串工具</span></div>
+          <img class="case-core-avatar" src="images/04-afa-assistant.jpg" alt="Afa醬">
+          <div><strong>Afa醬</strong><span>Hermes 驅動<br>接需求 → 選 Skill → 串工具</span></div>
         </div>
         <div class="case-node case-1">
           <div class="case-mark">CAL</div>
@@ -2918,12 +3017,15 @@
       <div class="kicker reveal">Case 03 / Daily Board Briefing</div>
       <h2 class="title reveal">Hermes 不只被動接需求，也能每天主動回報團隊狀態</h2>
       <div class="visual-story-layout">
-        <div class="visual-story-figure reveal"><img src="images/daily-board-summary-xiaohei-flow.png" alt="小黑手繪流程圖：Hermes 每天 09:00 巡看團隊看板，整理 blocked、due soon、沒更新，回報 Slack 早報並提醒 owner"></div>
+        <div class="visual-story-figure is-slack-proof reveal">
+          <img src="images/08-daily-board-slack-proof.png" alt="Afa醬每天上午九點在 Slack 回報 Azure 團隊看板，包含 Active Items、狀態、負責人、連結與最新留言">
+          <span class="slack-proof-label">ACTUAL OUTPUT · SLACK</span>
+        </div>
         <div class="visual-story-copy reveal">
           <div class="visual-story-step"><div class="visual-story-n">09</div><div><strong>每天定時巡看</strong><p>由排程觸發，不必等團隊成員開口詢問。</p></div></div>
           <div class="visual-story-step"><div class="visual-story-n">!</div><div><strong>找出需要注意的事</strong><p>整理 blocked、即將到期與太久沒更新的 ticket。</p></div></div>
           <div class="visual-story-step"><div class="visual-story-n">@</div><div><strong>Slack 早報與提醒</strong><p>先給團隊摘要，再提醒真正需要行動的 owner。</p></div></div>
-          <div class="visual-story-value">從被動問答，變成會主動巡查與回報的 AI 團隊助理。</div>
+          <div class="visual-story-value">實際輸出包含總量、狀態、Owner、Ticket 連結與最新留言，不只是一段摘要。</div>
         </div>
       </div>
       <div class="page-no">08 / 23</div>
