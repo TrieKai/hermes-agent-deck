@@ -2295,6 +2295,19 @@
       line-height: 1.2;
     }
 
+    .cx-role-card a {
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-color: rgba(10, 132, 255, .4);
+      text-underline-offset: 3px;
+      transition: color .15s ease, text-decoration-color .15s ease;
+    }
+
+    .cx-role-card a:hover {
+      color: var(--accent);
+      text-decoration-color: var(--accent);
+    }
+
     .cx-role-card p {
       margin: 8px 0 0;
       color: var(--muted);
@@ -3130,12 +3143,12 @@
         <div class="cx-role-card">
           <div class="cx-role-visual"><div class="cx-role-symbol">S</div></div>
           <div class="cx-role-label">Toolbox</div>
-          <div><h3>SCRAPI：實際動手</h3><p>把 CX 流程拉到本機，修改與檢查後，再安全地送回去。</p></div>
+          <div><h3><a href="https://googlecloudplatform.github.io/cxas-scrapi/stable/" target="_blank" rel="noopener noreferrer">SCRAPI</a>：實際動手</h3><p>把 CX 流程拉到本機，修改與檢查後，再安全地送回去。</p></div>
         </div>
         <div class="cx-role-card">
           <div class="cx-role-visual"><div class="cx-role-symbol">CX</div></div>
           <div class="cx-role-label">Workplace</div>
-          <div><h3>Google CX：工作現場</h3><p>客服機器人的流程圖，決定現在問什麼、下一步往哪裡走。</p></div>
+          <div><h3><a href="https://docs.cloud.google.com/gemini-enterprise-cx/cx-agent-studio" target="_blank" rel="noopener noreferrer">Google CX</a>：工作現場</h3><p>客服機器人的流程圖，決定現在問什麼、下一步往哪裡走。</p></div>
         </div>
       </div>
       <div class="cx-context-summary reveal">PM 只需要面對 Hermes：在 Slack 說需求、看結果、做確認，不必直接操作 SCRAPI。</div>
